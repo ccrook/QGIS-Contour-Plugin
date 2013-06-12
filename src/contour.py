@@ -109,17 +109,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uLevelsList.setSortingEnabled(False)
 
         #Signals
-        QObject.connect(self.uLayerName, SIGNAL("currentIndexChanged(int)"), self.uLayerNameUpdate)
-        QObject.connect(self.uFieldName, SIGNAL("currentIndexChanged(QString)"), self.uFieldNameUpdate)
-        QObject.connect(self.uMinContour, SIGNAL("valueChanged(double)"), self.validMinMax)
-        QObject.connect(self.uMaxContour, SIGNAL("valueChanged(double)"), self.validMinMax)
-        QObject.connect(self.uLevelsNumber, SIGNAL("valueChanged(int)"), self.computeLevels)
-        QObject.connect(self.uLevelsList, SIGNAL("itemDoubleClicked(QListWidgetItem *)"), self.validLevel)
-        QObject.connect(self.uButtonBox, SIGNAL("helpRequested()"), self.showHelp)
-        QObject.connect(self.uMethod, SIGNAL("currentIndexChanged(int)"), self.changeMethod)
-        QObject.connect(self.uLinesContours, SIGNAL("toggled(bool)"), self.modeToggled)
-        QObject.connect(self.uFilledContours, SIGNAL("toggled(bool)"), self.modeToggled)
-        QObject.connect(self.uBoth, SIGNAL("toggled(bool)"), self.modeToggled)
+        self.uLayerName.currentIndexChanged[int].connect(self.uLayerNameUpdate)
+        self.uFieldName.currentIndexChanged['QString'].connect(self.uFieldNameUpdate)
+        self.uMinContour.valueChanged[float].connect(self.validMinMax)
+        self.uMaxContour.valueChanged[float].connect(self.validMinMax)
+        self.uLevelsNumber.valueChanged[int].connect(self.computeLevels)
+        self.uLevelsList.itemDoubleClicked[QListWidgetItem].connect(self.validLevel)
+        self.uButtonBox.helpRequested.connect(self.showHelp)
+        self.uMethod.currentIndexChanged[int].connect(self.changeMethod)
+        self.uLinesContours.toggled[bool].connect(self.modeToggled)
+        self.uFilledContours.toggled[bool].connect(self.modeToggled)
+        self.uBoth.toggled[bool].connect(self.modeToggled)
 
         self.uLevelsNumber.setMinimum(2)
         self.uLevelsNumber.setValue(10)
@@ -186,7 +186,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if properties:
             layerId = properties.get('SourceLayerId')
             for l in self.sourceLayers():
-                if l.getLayerID() == layerId:
+                if l.id() == layerId:
                     sourceLayer = l
                     break
             if sourceLayer:
@@ -235,7 +235,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             return
         self._data = None
         self._replaceLayerSet = None
-        self._layer = self.uLayerName.itemData(index).toPyObject()
+        self._layer = self.uLayerName.itemData(index)
         self.uLayerDescription.setText("")
         changedLayer = self.getLayerWorkingCopy(self._layer)
         if not changedLayer:
@@ -278,7 +278,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def updateOutputName(self):
         if self._layer.name() and self._zField:
-            self.uOutputName.setText(QString("%s_%s"%(self._layer.name(), self._zField)))
+            self.uOutputName.setText("%s_%s"%(self._layer.name(), self._zField))
 
     def validMinMax(self):
         self.computeLevels()
@@ -290,7 +290,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                      "Enter the new level :", float(val),
                      -2147483647, 2147483647, 4)
         if ok:
-            item.setText(QString("%.4f"%newval))
+            item.setText("%.4f"%newval)
             self.enableOkButton()
 
     def computeLevels(self):
@@ -314,7 +314,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
         self.uLevelsList.clear()
         for i in range(0, len(levels)):
-            self.uLevelsList.addItem(QString("%.4f"%levels[i]))
+            self.uLevelsList.addItem("%.4f"%levels[i])
         self.enableOkButton()
 
     def modeToggled(self,enabled):
@@ -362,7 +362,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             oldLayerSet = self.contourLayerSet( replaceContourId )
             if oldLayerSet:
                 for layer in oldLayerSet.values():
-                    QgsMapLayerRegistry.instance().removeMapLayer( layer.getLayerID() )
+                    QgsMapLayerRegistry.instance().removeMapLayer( layer.id() )
             self._replaceLayerSet = self.contourLayerSet(self._contourId)
 
         except ContourError:
@@ -382,7 +382,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self._iface.openURL(file,False)
 
     def validate(self):
-        print self._isGridded()
         message = None
         if self.uLayerName.currentText() == "":
             message = "Please specify vector layer"
@@ -405,30 +404,28 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     yield layer
 
     def getFieldList(self, vlayer):
-        fProvider = vlayer.dataProvider()
-        allAttrs = fProvider.attributeIndexes()
-        fProvider.select(allAttrs)
-        fields = fProvider.fields()
         numberfields = []
-        for i in fields:
-            typ = string.lower(str(fields[i].typeName()))
-            if typ.startswith("int") or typ.startswith("double") or typ.startswith("real") or typ.startswith("float"):
-                numberfields.append(unicode(fields[i].name()))
+        for f in vlayer.pendingFields():
+            typ = unicode(f.typeName())[0:3].lower()
+            if typ=='int' or typ=='dou' or typ=='rea':
+                numberfields.append(unicode(f.name()))
         return numberfields
 
     def getLevels(self):
         list = self.uLevelsList
         return [float(list.item(i).text()) for i in range(0, list.count())]
 
-    def clearLayer(self, lyr):
-        pl = lyr.dataProvider()
-        pl.select()
-        f = QgsFeature()
+    def clearLayer(self, layer):
+        pl = layer.dataProvider()
+        request = QgsFeatureRequest()
+        request.setFlags(QgsFeatureRequest.NoGeometry)
+        request.setSubsetOfAttributes([])
         fids = []
-        while pl.nextFeature(f):
+        for f in pl.getFeatures(request):
             fids.append(f.id())
         pl.deleteFeatures(fids)
         pl.deleteAttributes(pl.attributeIndexes())
+        layer.updateFields()
 
     def createLayer( self, source, name, provider ):
         # Need to avoid prompting for CRS when creating a vector layer.
@@ -436,14 +433,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         prjSetting = settings.value("/Projections/defaultBehaviour")
         layer = None
         try:
-            settings.setValue("/Projections/defaultBehaviour", QVariant(""))
+            settings.setValue("/Projections/defaultBehaviour", '')
             layer = QgsVectorLayer(source, name, provider)
         finally:
             if prjSetting:
                 settings.setValue("/Projections/defaultBehaviour", prjSetting)
         return layer
 
-    def createVectorLayer(self, type, name, mode):
+    def createVectorLayer(self, type, name, mode,fields):
         layer = None
         if self._replaceLayerSet:
             layer = self._replaceLayerSet.get(mode)
@@ -456,11 +453,21 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if not layer:
             raise ContourError("Could not create layer for contours")
 
+        attributes = [
+            QgsField(name,QVariant.Int,'Int') if ftype == int else
+            QgsField(name,QVariant.Double,'Double') if ftype == float else
+            QgsField(name,QVariant.String,'String')
+            for name, ftype in fields
+        ]
+        pr = layer.dataProvider()
+        pr.addAttributes( attributes )
+        layer.updateFields()
+
         layer.setCrs(self._crs, False)
         levels = ";".join(map(str, self.getLevels()))
         properties = {
             'ContourId' : self._contourId,
-            'SourceLayerId' : self._layer.getLayerID(),
+            'SourceLayerId' : self._layer.id(),
             'SourceLayerAttr' : self._zField,
             'Mode' : mode,
             'Levels' : levels,
@@ -475,7 +482,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def addLayer(self, layer):
         registry = QgsMapLayerRegistry.instance()
-        if not registry.mapLayer(layer.getLayerID()):
+        if not registry.mapLayer(layer.id()):
             registry.addMapLayer(layer)
         else:
             self._iface.legendInterface().setLayerVisible(layer, True)
@@ -502,7 +509,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'Extend',
             'Method'
             ]:
-            properties[key] = str(layer.customProperty('ContourPlugin.'+key).toString())
+            properties[key] = str(layer.customProperty('ContourPlugin.'+key))
         if not properties['ContourId']:
             return None
         return properties
@@ -545,7 +552,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             yield set
 
         for layer in self.contourLayers({
-            'SourceLayerId' : self._layer.getLayerID(),
+            'SourceLayerId' : self._layer.id(),
             'SourceLayerAttr' : self._zField } ):
             id = self.getContourProperties(layer).get('ContourId')
             if id in ids:
@@ -566,28 +573,26 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def getData(self, layer, zField):
         self._gridData = None
         inLayer = self.getLayerWorkingCopy(layer)
-        provider = inLayer.dataProvider()
         self._crs = inLayer.crs()
-        index = provider.fieldNameIndex(zField)
-        provider.select([index])
 
-        inFeat = QgsFeature()
-        inGeom = QgsGeometry()
-        self.progressBar.setRange(0, provider.featureCount())
+        request = QgsFeatureRequest()
+        request.setSubsetOfAttributes([zField], layer.pendingFields() )
+
+        self.progressBar.setRange(0, layer.featureCount())
         count = 0
         x = list()
         y = list()
         z = list()
-        provider.rewind()
-        while provider.nextFeature(inFeat):
-            inGeom = inFeat.geometry().asPoint()
-            x.append(inGeom.x())
-            y.append(inGeom.y())
-            z.append(inFeat.attributeMap()[index].toString())
+        for feat in layer.getFeatures( request ):
+            zval = feat[zField]
+            if isinstance(zval,float):
+                geom = feat.geometry().asPoint()
+                x.append(geom.x())
+                y.append(geom.y())
+                z.append(zval)
             count = count + 1
             self.progressBar.setValue(count)
         self.progressBar.setValue(0)
-        z = map(float, z) #TODO : take care of NaNs, NULL, "",...
         x = np.array(x)
         y = np.array(y)
         z = np.array(z)
@@ -609,7 +614,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         levels = [float(l) for l in cs.levels]
         self.progressBar.setRange(0, len(cs.collections))
         for i, line in enumerate(cs.collections):
-            lines.append([ i, levels[i], [path.vertices for path in line.get_paths()] ])
+            linestrings = []
+            for path in line.get_paths():
+                if len(path.vertices) > 1:
+                    linestrings.append(path.vertices)
+            lines.append([ i, levels[i], linestrings])
             self.progressBar.setValue(i+1)
         self.progressBar.setValue(0)
         return lines
@@ -635,23 +644,25 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         for i, polygon in enumerate(cs.collections):
             mpoly = []
             for path in polygon.get_paths():
-                path.should_simplify=False
+                path.should_simplify = False
                 poly = path.to_polygons()
                 exterior = []
                 holes = []
                 if len(poly)>0:
                     exterior = poly[0] #and interiors (holes) are in poly[1:]
                     #Crazy correction of one vertice polygon, mpl doesn't care about it
-                    if len(exterior)==1:
-                        p0 = exterior[0]
-                        exterior = np.vstack((exterior, self.epsi_point(p0), self.epsi_point(p0)))
+                    if len(exterior) < 2:
+                        continue
+                    p0 = exterior[0]
+                    exterior = np.vstack((exterior, self.epsi_point(p0), self.epsi_point(p0)))
                     if len(poly)>1: #There's some holes
                         for h in poly[1:]:
                             if len(h)>2:
                                 holes.append(h)
 
                 mpoly.append([exterior, holes])
-            polygons.append([i, levels[i], levels[i+1], mpoly])
+            if len(mpoly) > 0:
+                polygons.append([i, levels[i], levels[i+1], mpoly])
             self.progressBar.setValue(i+1)
         self.progressBar.setValue(0)
         return polygons
@@ -664,61 +675,66 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def buildContourLayer(self, lines):
         dec = self.uPrecision.value()
         name = "%s"%str(self.uOutputName.text())
-        vl = self.createVectorLayer("MultiLineString", name, 'lines')
+        zfield=self._zField
+        vl = self.createVectorLayer("MultiLineString", name, 'lines',
+                                   [('index',int),
+                                    (zfield,float),
+                                    ('label',str)
+                                   ])
         pr = vl.dataProvider()
-        pr.addAttributes( [QgsField("index", QVariant.Int, "Int"),
-                           QgsField(self._zField, QVariant.Double, "Double"),
-                           QgsField("label", QVariant.String, "String")] )
-        vl.updateFieldMap()
+        fields=pr.fields()
         msg = list()
         for i, level, line in lines:
             try:
-                fet = QgsFeature()
-                fet.setGeometry(QgsGeometry.fromWkt(QString(MultiLineString(line).to_wkt())))
-                fet.setAttributeMap( { 0 : QVariant(i), 1 : QVariant(level),
-                                       2 : QVariant( str("%s"%np.round(level, dec)) )
-
-                                     } )
-                pr.addFeatures( [ fet ] )
+                feat = QgsFeature(fields)
+                feat.setGeometry(QgsGeometry.fromWkt(MultiLineString(line).to_wkt()))
+                feat['index']=i
+                feat[zfield]=level
+                feat['label']=np.round(level, dec)
+                pr.addFeatures( [ feat ] )
             except:
+                msg.append(str(sys.exc_info()[1]))
                 msg.append("%s"%level)
         if len(msg) > 0:
             self.message("Levels not represented : %s"%", ".join(msg),"Contour issue")
         vl.updateExtents()
-        if 'updateFieldMap' in dir(vl):
-            vl.updateFieldMap()
         vl.commitChanges()
         return vl
 
     def buildFilledContourLayer(self, polygons):
         dec = self.uPrecision.value()
         name = "%s"%str(self.uOutputName.text())
-        vl = self.createVectorLayer("MultiPolygon", name, 'filled')
+        zField = self._zField
+        zmin=zField+'_min'
+        zmax=zField+'_max'
+        vl = self.createVectorLayer("MultiPolygon", name, 'filled',
+                                   [('index',int),
+                                    (zmin,float),
+                                    (zmax,float),
+                                    ('label',str)
+                                   ])
         pr = vl.dataProvider()
-        pr.addAttributes( [QgsField("index", QVariant.Int, "Int"),
-                           QgsField(self._zField+"_min", QVariant.Double, "Double"),
-                           QgsField(self._zField+"_max", QVariant.Double, "Double"),
-                           QgsField("label", QVariant.String, "String")] )
-        vl.updateFieldMap()
+        fields = pr.fields()
         msg = list()
         for i, level_min, level_max, polygon in polygons:
             levels = str("%s - %s"%(np.round(level_min, dec), np.round(level_max, dec)))
             try:
-                fet = QgsFeature()
-                fet.setGeometry(QgsGeometry.fromWkt(QString(MultiPolygon(polygon).to_wkt())))
-                fet.setAttributeMap( { 0 : QVariant(i),
-                                       1 : QVariant(level_min),
-                                       2 : QVariant(level_max),
-                                       3 : QVariant(levels) } )
-                pr.addFeatures( [ fet ] )
+                feat = QgsFeature(fields)
+                try:
+                    feat.setGeometry(QgsGeometry.fromWkt(MultiPolygon(polygon).to_wkt()))
+                except:
+                    continue
+                feat['index']=i
+                feat[zmin]=level_min
+                feat[zmax]=level_max
+                feat['label']=levels
+                pr.addFeatures( [ feat ] )
             except:
                 self.message(str(sys.exc_info()[1]))
                 msg.append("%s"%levels)
         if len(msg) > 0:
             self.message("Levels not represented : %s"%", ".join(msg),"Filled Contour issue")
         vl.updateExtents()
-        if 'updateFieldMap' in dir(vl):
-            vl.updateFieldMap()
         vl.commitChanges()
         return vl
 

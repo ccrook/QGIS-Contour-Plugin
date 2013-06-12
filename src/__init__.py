@@ -40,11 +40,6 @@
 0.7 : Add more acceptable datatypes (integer, float, ...) from PostgreSQL
 0.6 : Pass contour.py Qt4 compliant and remove Qt3 signals handling
 
-
-
-
-
-
 '''
 
 
@@ -61,7 +56,10 @@ def version():
     return "0.9.2"
 
 def qgisMinimumVersion():
-    return "1.5"
+    return "2.0"
+
+def qgisMinimumVersion():
+    return "99.9"
 
 def author():
     return "Lionel Roubeyrie"
