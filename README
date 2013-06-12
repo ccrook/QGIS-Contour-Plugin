@@ -1,0 +1,12 @@
+Contour plugin for QGIS.
+
+Uses the python matplotlib contouring functions to create line or filled 
+polygon contours of data.  Data should be numeric attributes of a point
+vector layer.
+
+Plugin built by Lionel Roubeyrie.  Contributions from Chris Crook
+
+Zip the contents of the contour directory to create the plugin, i.e.
+
+zip -r contour contour
+
