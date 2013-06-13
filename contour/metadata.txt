@@ -2,10 +2,9 @@
 name=Contour plugin
 description=Trace contour lines (isolines) and filled contours from a points grid
 category=Plugins
-version=0.9.2
+version=1.0.1
 experimental=False
 qgisMinimumVersion=2.0
-qgisMaximumVersion=99.9
 author=Lionel Roubeyrie
 email=lionel.rouberyie@gmail.com
 icon=./contour.png
