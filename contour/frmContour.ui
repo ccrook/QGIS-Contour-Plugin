@@ -122,6 +122,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QRadioButton" name="uLayerContours">
+          <property name="text">
+           <string>filled layers</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item row="1" column="0">
