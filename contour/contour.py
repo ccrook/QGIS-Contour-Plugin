@@ -56,13 +56,14 @@ class Contour:
     def initGui(self):
         self.action = QAction(QIcon(":/plugins/contour/contour.png"), \
         "Contour", self._iface.mainWindow())
-        self.action.setWhatsThis("Plot contours based on points vector data")
+        self.action.setWhatsThis("Generate contours based on point vector data")
         QObject.connect(self.action, SIGNAL("triggered()"), self.run)
         self._iface.addToolBarIcon(self.action)
-        self._iface.addPluginToMenu("&Contour", self.action)
+        self._iface.vectorMenu().addAction(self.action)
 
     def unload(self):
         self._iface.removePluginMenu("&Contour", self.action)
+        self._iface.vectorMenu().removeAction(self.action)
         self._iface.removeToolBarIcon(self.action)
 
     def run(self):

@@ -1,10 +1,13 @@
 [general]
 name=Contour plugin
-description=Trace contour lines (isolines) and filled contours from a points grid
-category=Plugins
+description=Generate contour lines (isolines) and/or filled contours a set of data points.
+category=Vector
 version=1.0.1
 experimental=False
 qgisMinimumVersion=2.0
-author=Lionel Roubeyrie
-email=lionel.rouberyie@gmail.com
+author=Chris Crook, Lionel Roubeyrie
+email=ccrook@linz.govt.nz
 icon=./contour.png
+homepage=http://github.com/ccrook/QGIS-Contour-Plugin
+tracker=http://github.com/ccrook/QGIS-Contour-Plugin/issues
+repository=http://github.com/ccrook/QGIS-Contour-Plugin
