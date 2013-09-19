@@ -104,6 +104,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
         # Set up the user interface from Designer.
         self.setupUi(self)
+        # For the moment don't enable "contour layers"
+        # Not sure that there is a valid use case?
+        self.uLayerContours.hide()
+
         self._okButton = self.uButtonBox.button(QDialogButtonBox.Ok)
         self._okButton.setEnabled(False)
         re = QRegExp("\\d+\\.?\\d*(?:[Ee][+-]?\\d+)?")
