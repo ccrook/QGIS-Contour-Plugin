@@ -21,6 +21,7 @@
 #       MA 02110-1301, USA.
 
 '''Modifications :
+1.0.1 : Upgrade to QGIS2.0 API
 0.9.2 : Fix an import bug if Matplotlib is in RC version
 0.9.1 : Fixes the memory layer bug where vl.updateFieldMap() needs to be called
         for updating the attributes list + *contours levels must be
@@ -40,34 +41,7 @@
 0.7 : Add more acceptable datatypes (integer, float, ...) from PostgreSQL
 0.6 : Pass contour.py Qt4 compliant and remove Qt3 signals handling
 
-
-
-
-
-
 '''
-
-
-def name():
-    return "Contour plugin"
-
-def icon():
-    return "./contour.png"
-
-def description():
-    return "Trace contour lines (isolines) and filled contours from a points grid"
-
-def version():
-    return "0.9.2"
-
-def qgisMinimumVersion():
-    return "1.5"
-
-def author():
-    return "Lionel Roubeyrie"
-
-def email():
-    return "lionel.roubeyrie@gmail.com"
 
 def classFactory(iface):
     from contour import Contour

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="32px"
+   height="32px"
+   id="svg2985"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="contour.svg"
+   inkscape:export-filename="/home/ccrook/projects/qgis_plugins/QGIS2/contour/contour/contour.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <defs
+     id="defs2987">
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3079"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3010"
+       is_visible="true" />
+    <linearGradient
+       id="linearGradient3799">
+      <stop
+         style="stop-color:#e4e4e4;stop-opacity:1;"
+         offset="0"
+         id="stop3801" />
+      <stop
+         style="stop-color:#ababab;stop-opacity:1;"
+         offset="1"
+         id="stop3803" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient3017">
+      <stop
+         style="stop-color:#27518f;stop-opacity:1;"
+         offset="0"
+         id="stop3019" />
+      <stop
+         style="stop-color:#f5f8fc;stop-opacity:1;"
+         offset="1"
+         id="stop3021" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3017"
+       id="linearGradient3023"
+       x1="10"
+       y1="11"
+       x2="1"
+       y2="1"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient3799"
+       id="linearGradient3805"
+       x1="15"
+       y1="18"
+       x2="15"
+       y2="23"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="15.448942"
+     inkscape:cx="22.976063"
+     inkscape:cy="10.883983"
+     inkscape:current-layer="layer2"
+     showgrid="true"
+     inkscape:grid-bbox="true"
+     inkscape:document-units="px"
+     inkscape:window-width="1551"
+     inkscape:window-height="876"
+     inkscape:window-x="49"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:snap-grids="false">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2993" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata2990">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="layers"
+     style="display:inline">
+    <path
+       style="fill:#daf657;fill-opacity:1;stroke:#000000;stroke-width:1.27453494px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 7.4885896,16.102496 C 8.3166751,13.857475 8.6670393,13.016062 9.2674019,10.586922 9.8677624,8.1577847 8.8839329,5.2973248 10.529784,3.4107476 c 1.645852,-1.8865771 6.393318,-2.43155216 9.410491,-1.7792169 3.017173,0.6523352 5.926297,1.870022 7.402153,5.159729 1.475857,3.2897063 0.144426,9.0256543 -1.319764,12.4545183 -1.46419,3.428865 -3.722259,5.721271 -6.369295,7.472712 -2.647036,1.751441 -6.507757,2.333333 -8.836678,2.728132 -2.3289239,0.394799 -3.4850568,0.83649 -5.0495313,0.593072 -1.5644746,-0.24342 -3.5326765,-0.143948 -4.1888163,-1.957139 -0.65613968,-1.813191 0.6231809,-4.214478 1.377145,-5.990029 0.7539641,-1.775551 3.7050153,-3.745007 4.5331012,-5.99003 z"
+       id="path3087"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="zzzzzzzzzzzz"
+       inkscape:export-filename="/home/ccrook/projects/qgis_plugins/QGIS2/contour/contour/path3091.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <path
+       style="fill:#86b6e2;fill-opacity:1;stroke:#000000;stroke-width:1.10587692px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 6.4999754,24.513146 c -0.2912012,-1.527441 1.6275278,-3.813959 3.5349376,-5.403212 1.90741,-1.589254 3.258625,-1.016433 3.783878,-5.403211 0.525254,-4.3867777 -1.917919,-6.1300925 -0.497877,-7.8475228 1.420039,-1.7174303 5.148874,-1.8256245 7.044982,-1.2607494 1.896107,0.5648749 3.767034,3.3204457 4.256861,5.4804002 0.489826,2.159956 -1.242068,6.156254 -2.688545,8.67087 -1.446475,2.514617 -6.92051,5.454671 -6.92051,5.248834 0,-0.205836 -4.559529,2.542945 -6.1239068,2.315663 -1.5643777,-0.227284 -2.0986163,-0.27363 -2.3898198,-1.801072 z"
+       id="path3089"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="zzzzzzzzzz"
+       inkscape:export-filename="/home/ccrook/projects/qgis_plugins/QGIS2/contour/contour/path3091.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+    <path
+       style="fill:#151dc8;fill-opacity:1;stroke:#000000;stroke-width:1.10587692px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 16.084138,7.5573524 c 0.915525,-0.6684726 1.811948,-0.5892106 2.468984,-0.5236018 0.825523,0.082434 1.801123,0.6017695 2.036817,0.8066269 0.235695,0.2048577 0.755184,0.9965584 1.10537,1.9201101 0.350185,0.9235514 0.509453,1.9848714 0.08953,2.7112154 -0.419918,0.726345 -1.181863,0.93229 -2.266911,1.258916 -1.08505,0.326627 -2.353596,-0.06238 -2.711873,-0.358381 C 16.447777,13.076241 16.367989,12.78575 16.171629,11.405868 15.98125,10.06801 14.91759,8.4091042 16.084139,7.5573524 z"
+       id="path3091"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="sszszszss"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90" />
+  </g>
+</svg>
