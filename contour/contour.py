@@ -271,9 +271,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if not self._zField:
             self.enableOkButton()
             return
-        x, y, z = self.getData(self._layer, inputField)
-        self.z = z
-        ndata = len(x)
+        self.getData(self._layer, inputField)
+        if not self._data:
+            self.enableOkButton()
+            return
+        z = self._data[2]
+        ndata = len(z)
         self.uMinContour.setValue(np.min(z))
         self.uMaxContour.setValue(np.max(z))
         self.computeLevels()
@@ -597,20 +600,18 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         y = list()
         z = list()
         for feat in layer.getFeatures( request ):
-            zval = feat[zField]
-            if isinstance(zval,float):
+            try:
+                zval = float(feat[zField])
                 geom = feat.geometry().asPoint()
                 x.append(geom.x())
                 y.append(geom.y())
                 z.append(zval)
+            except:
+                pass
             count = count + 1
             self.progressBar.setValue(count)
         self.progressBar.setValue(0)
-        x = np.array(x)
-        y = np.array(y)
-        z = np.array(z)
-        self._data = [x, y, z]
-        return x, y, z
+        self._data = [np.array(x), np.array(y), np.array(z)] if len(x) > 0 else None
 
     def computeContours(self):
         extend = str(self.uExtend.itemText(self.uExtend.currentIndex()))
