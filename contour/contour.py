@@ -306,15 +306,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def computeLevels(self):
         method = str(self.uMethod.itemText(self.uMethod.currentIndex()))
-        if method == "Equal":
-            levels = np.linspace(float(self.uMinContour.value()),
-                            float(self.uMaxContour.value()),
-                            self.uLevelsNumber.value())
-        if method == "Quantile": #Copied from scipy.stats.scoreatpercentile
-            levels = list()
-            values = np.sort(self.z.flatten())
+
+        # Default if there is no data or using "Equal" method...
+        levels = np.linspace(float(self.uMinContour.value()),
+                        float(self.uMaxContour.value()),
+                        self.uLevelsNumber.value())
+
+        if method == "Quantile" and self._data:
+            values = np.sort(self._data[2].flatten())
             values = values[(float(self.uMinContour.value()) <= values) & (values <= self.uMaxContour.value())]
             if values.size > 1:
+                levels=list()
                 for per in np.linspace(0, 100, self.uLevelsNumber.value()):
                     idx = per /100. * (values.shape[0] - 1)
                     if (idx % 1 == 0):
