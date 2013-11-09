@@ -422,7 +422,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         numberfields = []
         for f in vlayer.pendingFields():
             typ = unicode(f.typeName())[0:3].lower()
-            if typ=='int' or typ=='dou' or typ=='rea':
+            if typ in ['int','dou','rea','flo','num']:
                 numberfields.append(unicode(f.name()))
         return numberfields
 
