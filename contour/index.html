@@ -52,7 +52,8 @@
        <p>
        The plugin provides an option of thinning the points before contouring.  This may be necessary
        if the input data include points very close together, as in this case the matplotlib contouring function can fail to work.  The plugin uses a crude point thinning algorithm to 
-       choose a subset of points to use for the contouring.  
+       choose a subset of points to use for the contouring.  The point thinning radius is in the 
+       units of the coordinate system, typically either degrees or metres.
        </p>
        <h2>Warning messages</h2>
        <p>
