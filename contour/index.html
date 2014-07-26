@@ -47,7 +47,12 @@
        When the minimum and maximum values and the number of levels have been set the calculated contour levels will be displayed in a list.
        These can be individually edited by double clicking on them.
 
-       You can also edit the resulting layer name and the labelling precision in the "Outpout" box. The "label precision" is a convenient way to format the "label" attribute of the resulting layer, which then can be directly used and displayed in the "Categorized" renderer.
+       You can also edit the resulting layer name and the labelling precision in the "Output" box. The "label precision" is a convenient way to format the "label" attribute of the resulting layer, which then can be directly used and displayed in the "Categorized" renderer.
+       </p>
+       <p>
+       The plugin provides an option of thinning the points before contouring.  This may be necessary
+       if the input data include points very close together, as in this case the matplotlib contouring function can fail to work.  The plugin uses a crude point thinning algorithm to 
+       choose a subset of points to use for the contouring.  
        </p>
        <h2>Warning messages</h2>
        <p>
@@ -59,6 +64,11 @@
        <p>
        No contours will be drawn for the requested contour values because they
        are beyond the range of the data. Another case is that the values are on unsatisfying number of points, because a contour (line) needs at least 2 points and a filled contour (polygon) 3 points. A workaround is to select a lesser maximum value and/or a bigger minimum value.
+       </p>
+       <h3>Exception encountered ...</h3>
+       <p>
+       This is usually due to data containing duplicate points or points near to each other.  This may
+       be fixed by using the point thinning option (or trying different thinning radius values).
        </p>
        </div>
         <p>

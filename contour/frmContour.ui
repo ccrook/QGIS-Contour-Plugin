@@ -83,6 +83,60 @@
         </item>
        </layout>
       </item>
+      <item row="3" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Apply point thinning</string>
+          </property>
+          <property name="buddy">
+           <cstring>uThinPoints</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="uThinPoints">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>Radius</string>
+          </property>
+          <property name="buddy">
+           <cstring>uThinRadius</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="uThinRadius">
+          <property name="decimals">
+           <number>6</number>
+          </property>
+          <property name="singleStep">
+           <double>0.000001000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="uLayerDescription">
         <property name="text">
@@ -178,6 +232,9 @@
         <property name="text">
          <string>Min</string>
         </property>
+        <property name="buddy">
+         <cstring>uMinContour</cstring>
+        </property>
        </widget>
       </item>
       <item row="2" column="1">
@@ -207,6 +264,9 @@
         <property name="text">
          <string>Max</string>
         </property>
+        <property name="buddy">
+         <cstring>uMaxContour</cstring>
+        </property>
        </widget>
       </item>
       <item row="3" column="1">
@@ -235,6 +295,9 @@
        <widget class="QLabel" name="label_10">
         <property name="text">
          <string>Extend</string>
+        </property>
+        <property name="buddy">
+         <cstring>uExtend</cstring>
         </property>
        </widget>
       </item>
@@ -272,6 +335,9 @@
        <widget class="QLabel" name="label_7">
         <property name="text">
          <string>Method</string>
+        </property>
+        <property name="buddy">
+         <cstring>uMethod</cstring>
         </property>
        </widget>
       </item>
@@ -311,6 +377,9 @@
           <property name="text">
            <string>Layer name</string>
           </property>
+          <property name="buddy">
+           <cstring>uOutputName</cstring>
+          </property>
          </widget>
         </item>
         <item row="0" column="1">
@@ -320,6 +389,9 @@
          <widget class="QLabel" name="label_9">
           <property name="text">
            <string>Label precision</string>
+          </property>
+          <property name="buddy">
+           <cstring>uPrecision</cstring>
           </property>
          </widget>
         </item>
@@ -378,17 +450,23 @@
  <tabstops>
   <tabstop>uLayerName</tabstop>
   <tabstop>uFieldName</tabstop>
+  <tabstop>uThinPoints</tabstop>
+  <tabstop>uThinRadius</tabstop>
   <tabstop>uLinesContours</tabstop>
   <tabstop>uFilledContours</tabstop>
   <tabstop>uBoth</tabstop>
+  <tabstop>uLayerContours</tabstop>
   <tabstop>uLevelsNumber</tabstop>
   <tabstop>uMinContour</tabstop>
   <tabstop>uMaxContour</tabstop>
+  <tabstop>uExtend</tabstop>
+  <tabstop>uMethod</tabstop>
   <tabstop>uLevelsList</tabstop>
+  <tabstop>uOutputName</tabstop>
+  <tabstop>uPrecision</tabstop>
   <tabstop>uButtonBox</tabstop>
  </tabstops>
- <resources>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>uButtonBox</sender>

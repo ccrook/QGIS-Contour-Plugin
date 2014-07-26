@@ -46,7 +46,29 @@ EPSILON = 1.e-27
 
 def _interpolate(a, b, fraction):
     return a + (b - a)*fraction;
-    
+
+# Crude point thinning algorithm!
+
+def _thindex1( x, y, x0, y0, resolution, index=None):
+    if index is None:
+        index=np.arange(x.shape[0],dtype=int)
+    values,ix=np.unique(((x[index]-x0)/resolution).astype(int),return_inverse=True)
+    values,iy=np.unique(((y[index]-y0)/resolution).astype(int),return_inverse=True)
+    mix=ix*values.shape[0]+iy
+    values,indices=np.unique(mix,return_inverse=True)
+    thinned=np.zeros(values.shape,dtype=int)
+    thinned[indices]=index
+    return thinned
+
+def _thindex(x,y,resolution):
+    x0=np.min(x)
+    y0=np.min(y)
+    index=_thindex1(x,y,x0,y0,resolution)
+    index=_thindex1(x,y,x0+resolution/2,y0,resolution,index)
+    index=_thindex1(x,y,x0,y0+resolution/2,resolution,index)
+    index=_thindex1(x,y,x0+resolution/2,y0+resolution/2,resolution,index)
+    return index
+
 
 class Contour:
 
@@ -248,6 +270,23 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         changedLayer = self.getLayerWorkingCopy(self._layer)
         if not changedLayer:
            return
+
+        # Get a default resolution for point thinning
+        extent=changedLayer.extent()
+        resolution=(extent.width()+extent.height())/20000.0;
+        radius=0.000001
+        while radius < resolution:
+            if radius * 2 > resolution:
+                break
+            if radius * 5 > resolution:
+                radius *= 2
+                break
+            if radius * 10 > resolution:
+                radius *= 5
+                break
+            radius *= 10
+        self.uThinRadius.setValue( radius )
+
         fieldList = self.getFieldList(changedLayer)
         self.uFieldName.clear()
         self._loadingLayer=True
@@ -261,17 +300,20 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.enableOkButton()
 
     def uFieldNameUpdate(self, inputField):
+        self._zField = inputField
+        self.reloadData()
+
+    def reloadData(self):
         if self._loadingLayer:
             return
         self._data = None
         self._replaceLayerSet = None
         if not self._layer:
             return
-        self._zField = inputField
         if not self._zField:
             self.enableOkButton()
             return
-        self.getData(self._layer, inputField)
+        self.getData(self._layer, self._zField)
         if not self._data:
             self.enableOkButton()
             return
@@ -365,6 +407,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     self._replaceLayerSet = set
                     replaceContourId = self.layerSetContourId(set)
                     break
+            self.reloadThinnedData()
             if self.uLinesContours.isChecked():
                 self.makeContours()
             elif self.uFilledContours.isChecked():
@@ -383,8 +426,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         except ContourError:
             self.message("Error calculating grid/contours: "+str(sys.exc_info()[1]))
         except:
-            self.message("Exception struck: " + str(sys.exc_info()[1]))
-            raise
+            self.message("Exception encountered: " + str(sys.exc_info()[1])+" (Try thinning points)")
         # self._okButton.setEnabled(False)
 
     def message(self,text,title="Contour Error"):
@@ -588,8 +630,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             clayer = self.buildFilledContourLayer(polygons)
         self.addLayer(clayer)
 
+
     def getData(self, layer, zField):
         self._gridData = None
+        self._data=None
         inLayer = self.getLayerWorkingCopy(layer)
         self._crs = inLayer.crs()
 
@@ -613,7 +657,28 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             count = count + 1
             self.progressBar.setValue(count)
         self.progressBar.setValue(0)
-        self._data = [np.array(x), np.array(y), np.array(z)] if len(x) > 0 else None
+        if len(x) == 0:
+            return
+        x=np.array(x)
+        y=np.array(y)
+        z=np.array(z)
+        radius=0.0
+        if self.uThinPoints.isChecked:
+            radius=self.uThinRadius.value()
+            if radius > 0:
+                index=_thindex(x,y,radius)
+                x=x[index]
+                y=y[index]
+                z=z[index]
+        self._data = [x,y,z]
+        self._thinRadius=radius
+
+    def reloadThinnedData( self ):
+        radius=0.0
+        if self.uThinPoints.isChecked:
+            radius=self.uThinRadius.value()
+        if self._thinRadius != radius:
+            self.reloadData()
 
     def computeContours(self):
         extend = str(self.uExtend.itemText(self.uExtend.currentIndex()))
