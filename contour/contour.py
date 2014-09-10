@@ -256,6 +256,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             for level in levels:
                 self.uLevelsList.addItem(level)
             self.uPrecision.setValue(int(properties.get('LabelPrecision')))
+            self.uLabelUnits.setText(properties.get('LabelUnits') or '')
         finally:
             pass
         self._replaceLayerSet = layerSet
@@ -339,15 +340,41 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def validLevel(self, item):
         val = item.text()
         z = self._data[2]
-        newval, ok = QInputDialog.getDouble(self, "Level",
-                     "Enter the new level :", float(val),
-                     -2147483647, 2147483647, 4)
+        newval, ok = QInputDialog.getText(self, "Update level", 
+                         "Enter a single level to replace this one,\n"+
+                         "or a space separated list of levels to replace all",
+                         QLineEdit.Normal,
+                         val)
         if ok:
-            item.setText("%.4f"%newval)
+            values=newval.split()
+            for v in values:
+                try:
+                    float(v)
+                except:
+                    QMessageBox.warning(self._iface.mainWindow(), "Contour error",
+                                        "Invalid contour value "+v)
+                    return
+            if len(values) < 1:
+                return
+            if len(values) == 1: 
+                item.setText(newval)
+                self.enableOkButton()
+                return
+            values.sort(key=float)
+            self.uLevelsNumber.setValue(len(values))
+            self.uLevelsList.clear()
+            for v in values:
+                self.uLevelsList.addItem(v)
             self.enableOkButton()
 
     def computeLevels(self):
         method = str(self.uMethod.itemText(self.uMethod.currentIndex()))
+
+        # If manually setting levels then don't do this work! and leave existing contours 
+        # in place.
+
+        if method == "Manual" and self.uLevelsList.count()==self.uLevelsNumber.value():
+            return
 
         # Default if there is no data or using "Equal" method...
         levels = np.linspace(float(self.uMinContour.value()),
@@ -368,8 +395,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                         levels.append(v)
 
         self.uLevelsList.clear()
+        dec = self.uPrecision.value()
         for i in range(0, len(levels)):
-            self.uLevelsList.addItem("%.4f"%levels[i])
+            self.uLevelsList.addItem(str(np.round(levels[i],dec)))
         self.enableOkButton()
 
     def modeToggled(self,enabled):
@@ -529,6 +557,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'Mode' : mode,
             'Levels' : levels,
             'LabelPrecision' : str(self.uPrecision.value()),
+            'LabelUnits' : unicode(self.uLabelUnits.text()),
             'MinContour' : str(self.uMinContour.value()),
             'MaxContour' : str(self.uMaxContour.value()),
             'Extend' : str(self.uExtend.itemText(self.uExtend.currentIndex())),
@@ -777,7 +806,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         fields=pr.fields()
         msg = list()
         for i, level, line in lines:
-            levels=str(np.round(level,dec))
+            levels=unicode(np.round(level,dec))+unicode(self.uLabelUnits.text())
             try:
                 feat = QgsFeature(fields)
                 feat.setGeometry(QgsGeometry.fromWkt(MultiLineString(line).to_wkt()))
@@ -810,7 +839,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         fields = pr.fields()
         msg = list()
         for i, level_min, level_max, polygon in polygons:
-            levels = "%s - %s"%(np.round(level_min, dec), np.round(level_max, dec))
+            levels = "%s - %s%s"%(
+                np.round(level_min, dec), 
+                np.round(level_max, dec),
+                self.uLabelUnits.text()
+            )
             try:
                 feat = QgsFeature(fields)
                 try:
@@ -844,7 +877,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         fields = pr.fields()
         msg = list()
         for i, level_min, level_max, polygon in polygons:
-            levels = "%s"%(np.round(level_min, dec))
+            levels = "%s"%(np.round(level_min, dec))+self.uLabelUnits.text()
             try:
                 feat = QgsFeature(fields)
                 try:

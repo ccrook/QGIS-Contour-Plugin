@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>506</width>
-    <height>508</height>
+    <height>532</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,64 +26,7 @@
       <string>Input</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <widget class="QLabel" name="label_3">
-          <property name="text">
-           <string>Vector layer</string>
-          </property>
-          <property name="buddy">
-           <cstring>uLayerName</cstring>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="uLayerName">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="toolTip">
-           <string>WHere to take the input datas. Select a point shapefile in the list...</string>
-          </property>
-          <property name="statusTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>Data field   </string>
-          </property>
-          <property name="buddy">
-           <cstring>uFieldName</cstring>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="uFieldName">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="toolTip">
-           <string>Which attribute stores the input datas?</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="3" column="0">
+      <item row="2" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QLabel" name="label_2">
@@ -137,12 +80,68 @@
         </item>
        </layout>
       </item>
-      <item row="2" column="0">
+      <item row="1" column="0">
        <widget class="QLabel" name="uLayerDescription">
         <property name="text">
          <string/>
         </property>
        </widget>
+      </item>
+      <item row="0" column="0">
+       <layout class="QFormLayout" name="formLayout_2">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_3">
+          <property name="text">
+           <string>Vector layer</string>
+          </property>
+          <property name="buddy">
+           <cstring>uLayerName</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="uLayerName">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Point layer containing data to contour</string>
+          </property>
+          <property name="statusTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Data field   </string>
+          </property>
+          <property name="buddy">
+           <cstring>uFieldName</cstring>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="uFieldName">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>Field in layer to contour</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -359,6 +358,11 @@
           <string>Quantile</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>Manual</string>
+         </property>
+        </item>
        </widget>
       </item>
      </layout>
@@ -385,6 +389,64 @@
         <item row="0" column="1">
          <widget class="QLineEdit" name="uOutputName"/>
         </item>
+        <item row="1" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSpinBox" name="uPrecision">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="statusTip">
+             <string>Number of levels between min and max value (from data field)</string>
+            </property>
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>4</number>
+            </property>
+            <property name="value">
+             <number>4</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Label units text </string>
+            </property>
+            <property name="buddy">
+             <cstring>uLabelUnits</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="uLabelUnits"/>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
         <item row="1" column="0">
          <widget class="QLabel" name="label_9">
           <property name="text">
@@ -392,28 +454,6 @@
           </property>
           <property name="buddy">
            <cstring>uPrecision</cstring>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QSpinBox" name="uPrecision">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="statusTip">
-           <string>Number of levels between min and max value (from data field)</string>
-          </property>
-          <property name="minimum">
-           <number>0</number>
-          </property>
-          <property name="maximum">
-           <number>4</number>
-          </property>
-          <property name="value">
-           <number>4</number>
           </property>
          </widget>
         </item>
@@ -457,13 +497,14 @@
   <tabstop>uBoth</tabstop>
   <tabstop>uLayerContours</tabstop>
   <tabstop>uLevelsNumber</tabstop>
+  <tabstop>uLevelsList</tabstop>
   <tabstop>uMinContour</tabstop>
   <tabstop>uMaxContour</tabstop>
   <tabstop>uExtend</tabstop>
   <tabstop>uMethod</tabstop>
-  <tabstop>uLevelsList</tabstop>
   <tabstop>uOutputName</tabstop>
   <tabstop>uPrecision</tabstop>
+  <tabstop>uLabelUnits</tabstop>
   <tabstop>uButtonBox</tabstop>
  </tabstops>
  <resources/>

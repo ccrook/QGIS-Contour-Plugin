@@ -39,15 +39,27 @@
        Contours can be displayed either as line features along the contour levels, or as
        polygon features (defining the area between each set of contour lines), or both.
        </p>
-       <p>The number of levels, minimum and maximum values and the computation method define levels at which contours will be drawn.
+       <p>The number of levels, minimum and maximum values and the computation method can be used to calculate
+       the contour levels.  
+       </p>
+       <p>
+       Possible computation methods are Equal (contours at equal intervals), Quantile
+       (contours at equal quantiles of the data set), or Manual.  The manual option limits automatic 
+       recalculation - for example values are not recalculated if a different data field or vector layer
+       is selected.
+       </p>
+       <p>
        When the data are read, the minimum and maximum values of the data field are calculated and displayed.  They can then be edited to choose different minimum and maximum contour levels.
        The number of levels includes the minimum and maximum values.  So for example choosing minimum 200.0, maximum 600.0, and 5 levels equally spaced will generate contours at 200, 300, 400, 500, and 600. An extend option can be selected to generate closed filled contours (in our example, if a levels of 600 to infinity is required, then select extend=max will compute this level).
        </p>
        <p>
        When the minimum and maximum values and the number of levels have been set the calculated contour levels will be displayed in a list.
        These can be individually edited by double clicking on them.
-
-       You can also edit the resulting layer name and the labelling precision in the "Output" box. The "label precision" is a convenient way to format the "label" attribute of the resulting layer, which then can be directly used and displayed in the "Categorized" renderer.
+       This provides options for either replacing a single item, or replacing the entire list.  To replace
+       the entire list enter all the contour levels required separated by space characters.
+       </p>
+       <p>
+       You can also edit the resulting layer name and the labelling precision in the &quot;Output&quot; box. The &quot;label precision&quot; is a convenient way to format the &quot;label&quot; attribute of the resulting layer, which then can be directly used and displayed in the &quot;Categorized&quot; renderer.  It also is used as the precision of automatically calculated labels.  The Label units text is a string that is appended to the values to create the level label.
        </p>
        <p>
        The plugin provides an option of thinning the points before contouring.  This may be necessary
