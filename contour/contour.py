@@ -33,6 +33,7 @@ import sys
 import os.path
 import string
 import math
+import re
 import inspect
 import numpy as np
 import matplotlib as mpl
@@ -134,10 +135,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self._okButton.setEnabled(False)
         re = QRegExp("\\d+\\.?\\d*(?:[Ee][+-]?\\d+)?")
         self.uLevelsList.setSortingEnabled(False)
+        self.uSelectedOnly.setChecked(False)
+        self.uSelectedOnly.setEnabled(False)
+        self.uColorRamp.populate(QgsStyleV2.defaultStyle())
+        self.uDataField.setExpressionDialogTitle("Value to contour")
 
         #Signals
         self.uLayerName.currentIndexChanged[int].connect(self.uLayerNameUpdate)
-        self.uFieldName.currentIndexChanged['QString'].connect(self.uFieldNameUpdate)
+        self.uDataField.fieldChanged['QString'].connect(self.uDataFieldUpdate)
+        self.uSelectedOnly.toggled.connect(self.reloadData)
         self.uMinContour.valueChanged[float].connect(self.validMinMax)
         self.uMaxContour.valueChanged[float].connect(self.validMinMax)
         self.uLevelsNumber.valueChanged[int].connect(self.computeLevels)
@@ -227,12 +233,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if not contourId:
             return
         layerSet = self.contourLayerSet( contourId )
-        attr = properties.get('SourceLayerAttr')
-        index = self.uFieldName.findText(attr)
-        if index < 0:
-            return
         try:
-            self.uFieldName.setCurrentIndex(index)
+            attr = properties.get('SourceLayerAttr')
+            self.uDataField.setField(attr)
             if layerSet.has_key('filled'):
                 if layerSet.has_key('lines'):
                     self.uBoth.setChecked(True)
@@ -288,19 +291,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             radius *= 10
         self.uThinRadius.setValue( radius )
 
-        fieldList = self.getFieldList(changedLayer)
-        self.uFieldName.clear()
         self._loadingLayer=True
-        for f in fieldList:
-            self.uFieldName.addItem(f)
-
-        self.uFieldName.setCurrentIndex(-1)
+        haveSelected=self._layer.selectedFeatureCount() > 0
+        self.uSelectedOnly.setChecked(haveSelected)
+        self.uSelectedOnly.setEnabled(haveSelected)
+        self.uDataField.setLayer( self._layer )
         self._loadingLayer=False
-        if self.uFieldName.count() == 1:
-            self.uFieldName.setCurrentIndex(0)
+        #if self.uDataField.count() == 1:
+        #    self.uDataField.setCurrentIndex(0)
         self.enableOkButton()
 
-    def uFieldNameUpdate(self, inputField):
+    def uDataFieldUpdate(self, inputField):
         self._zField = inputField
         self.reloadData()
 
@@ -332,7 +333,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def updateOutputName(self):
         if self._layer.name() and self._zField:
-            self.uOutputName.setText("%s_%s"%(self._layer.name(), self._zField))
+            zf=self._zField
+            if re.search(r'\W',zf):
+                zf='expr'
+            self.uOutputName.setText("%s_%s"%(self._layer.name(), zf ))
 
     def validMinMax(self):
         self.computeLevels()
@@ -470,7 +474,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         message = None
         if self.uLayerName.currentText() == "":
             message = "Please specify vector layer"
-        if (self.uFieldName.currentText() == "") or (self._data == None):
+        if (self.uDataField.currentText() == "") or (self._data == None):
             message = "Please specify data field"
         if message != None:
             raise ContourError(message)
@@ -665,34 +669,49 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self._data=None
         inLayer = self.getLayerWorkingCopy(layer)
         self._crs = inLayer.crs()
-
-        request = QgsFeatureRequest()
-        request.setSubsetOfAttributes([zField], layer.pendingFields() )
+        fids=None
+        if self.uSelectedOnly.isChecked():
+            fids=set(layer.selectedFeaturesIds())
 
         self.progressBar.setRange(0, layer.featureCount())
         count = 0
         x = list()
         y = list()
         z = list()
-        for feat in layer.getFeatures( request ):
-            try:
-                zval = float(feat[zField])
-                geom = feat.geometry().asPoint()
-                x.append(geom.x())
-                y.append(geom.y())
-                z.append(zval)
-            except:
-                pass
-            count = count + 1
-            self.progressBar.setValue(count)
-        self.progressBar.setValue(0)
+        try:
+            expression=QgsExpression(zField)
+            fields=layer.pendingFields()
+            if expression.hasParserError():
+                raise RuntimeError("Cannot parse "+zField)
+            if not expression.prepare(fields):
+                raise RuntimeError("Cannot prepare "+zField+" with "+str(fields))
+            request = QgsFeatureRequest()
+            request.setSubsetOfAttributes( expression.referencedColumns(),fields)
+            for feat in layer.getFeatures( request ):
+                try:
+                    if fids is not None and feat.id() not in fids:
+                        continue
+                    zval=expression.evaluate(feat)
+                    if zval is not None:
+                        geom = feat.geometry().asPoint()
+                        x.append(geom.x())
+                        y.append(geom.y())
+                        z.append(zval)
+                except:
+                    raise
+                    pass
+                count = count + 1
+                self.progressBar.setValue(count)
+        finally:
+            self.progressBar.setValue(0)
+
         if len(x) == 0:
             return
         x=np.array(x)
         y=np.array(y)
         z=np.array(z)
         radius=0.0
-        if self.uThinPoints.isChecked:
+        if self.uThinPoints.isChecked():
             radius=self.uThinRadius.value()
             if radius > 0:
                 index=_thindex(x,y,radius)
@@ -704,7 +723,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def reloadThinnedData( self ):
         radius=0.0
-        if self.uThinPoints.isChecked:
+        if self.uThinPoints.isChecked():
             radius=self.uThinRadius.value()
         if self._thinRadius != radius:
             self.reloadData()
@@ -713,13 +732,16 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         extend = str(self.uExtend.itemText(self.uExtend.currentIndex()))
         x, y, z = self._data
         levels = self.getLevels()
-        if self._isMPLOk()==True: # If so, we can use the new tricontour fonction
-            cs = plt.tricontour(x, y, z, levels, extend=extend)
-        else:
-            gx = x.reshape(self._nr,self._nc)
-            gy = y.reshape(self._nr,self._nc)
-            gz = z.reshape(self._nr,self._nc)
-            cs = plt.contour(gx, gy, gz, levels, extend=extend)
+        try:
+            if self._isMPLOk()==True: # If so, we can use the new tricontour fonction
+                cs = plt.tricontour(x, y, z, levels, extend=extend)
+            else:
+                gx = x.reshape(self._nr,self._nc)
+                gy = y.reshape(self._nr,self._nc)
+                gz = z.reshape(self._nr,self._nc)
+                cs = plt.contour(gx, gy, gz, levels, extend=extend)
+        except:
+            raise
         lines = list()
         levels = [float(l) for l in cs.levels]
         self.progressBar.setRange(0, len(cs.collections))

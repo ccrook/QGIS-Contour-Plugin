@@ -123,21 +123,19 @@
           <property name="text">
            <string>Data field   </string>
           </property>
-          <property name="buddy">
-           <cstring>uFieldName</cstring>
-          </property>
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QComboBox" name="uFieldName">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+         <widget class="QgsFieldExpressionWidget" name="uDataField">
+          <property name="filters">
+           <set>QgsFieldProxyModel::Numeric</set>
           </property>
-          <property name="toolTip">
-           <string>Field in layer to contour</string>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="uSelectedOnly">
+          <property name="text">
+           <string>Use selected points only</string>
           </property>
          </widget>
         </item>
@@ -368,6 +366,29 @@
      </layout>
     </widget>
    </item>
+   <item row="3" column="0">
+    <widget class="QProgressBar" name="progressBar">
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <property name="textVisible">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QDialogButtonBox" name="uButtonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
    <item row="2" column="0" colspan="2">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
@@ -376,6 +397,9 @@
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="0" column="0">
        <layout class="QFormLayout" name="formLayout">
+        <property name="bottomMargin">
+         <number>6</number>
+        </property>
         <item row="0" column="0">
          <widget class="QLabel" name="label_8">
           <property name="text">
@@ -457,39 +481,52 @@
           </property>
          </widget>
         </item>
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="uApplyColors">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QgsColorRampComboBox" name="uColorRamp"/>
+          </item>
+         </layout>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_13">
+          <property name="text">
+           <string>Apply colors</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QProgressBar" name="progressBar">
-     <property name="value">
-      <number>0</number>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="textVisible">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QDialogButtonBox" name="uButtonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsFieldExpressionWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsfieldexpressionwidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsColorRampComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgis.gui.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>uLayerName</tabstop>
-  <tabstop>uFieldName</tabstop>
+  <tabstop>uSelectedOnly</tabstop>
   <tabstop>uThinPoints</tabstop>
   <tabstop>uThinRadius</tabstop>
   <tabstop>uLinesContours</tabstop>
@@ -497,14 +534,16 @@
   <tabstop>uBoth</tabstop>
   <tabstop>uLayerContours</tabstop>
   <tabstop>uLevelsNumber</tabstop>
-  <tabstop>uLevelsList</tabstop>
-  <tabstop>uMinContour</tabstop>
   <tabstop>uMaxContour</tabstop>
+  <tabstop>uMinContour</tabstop>
   <tabstop>uExtend</tabstop>
   <tabstop>uMethod</tabstop>
+  <tabstop>uLevelsList</tabstop>
   <tabstop>uOutputName</tabstop>
   <tabstop>uPrecision</tabstop>
   <tabstop>uLabelUnits</tabstop>
+  <tabstop>uApplyColors</tabstop>
+  <tabstop>uColorRamp</tabstop>
   <tabstop>uButtonBox</tabstop>
  </tabstops>
  <resources/>
