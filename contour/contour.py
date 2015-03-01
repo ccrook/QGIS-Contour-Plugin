@@ -25,8 +25,9 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4.QtXml import QDomDocument
 from qgis.core import *
-from qgis.gui import QgsEncodingFileDialog
+# from qgis.gui import QgsEncodingFileDialog
 import resources
 
 import sys
@@ -105,6 +106,9 @@ class ContourError(Exception):
     def __str__(self):
         return self._message
 
+class ContourGenerationError(Exception):
+    pass
+
 ###########################################################
 class ContourDialog(QDialog, Ui_ContourDialog):
 
@@ -139,6 +143,22 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uSelectedOnly.setEnabled(False)
         self.uColorRamp.populate(QgsStyleV2.defaultStyle())
         self.uDataField.setExpressionDialogTitle("Value to contour")
+        self.uLevelsNumber.setMinimum(2)
+        self.uLevelsNumber.setValue(10)
+        self.uLinesContours.setChecked(True)
+        self.uExtend.setCurrentIndex(0)
+        self.progressBar.setValue(0)
+
+        self.loadSettings()
+
+        mapCanvas = self._iface.mapCanvas()
+        self._loadingLayer = True
+        for layer in self.sourceLayers():
+            self.uLayerName.addItem(layer.name(),layer)
+        self.uLayerName.setCurrentIndex(-1)
+        self._loadingLayer = False
+
+        self.enableOkButton()
 
         #Signals
         self.uLayerName.currentIndexChanged[int].connect(self.uLayerNameUpdate)
@@ -155,22 +175,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uBoth.toggled[bool].connect(self.modeToggled)
         self.uLayerContours.toggled[bool].connect(self.modeToggled)
 
-        self.uLevelsNumber.setMinimum(2)
-        self.uLevelsNumber.setValue(10)
-        self.uLinesContours.setChecked(True)
-        self.uExtend.setCurrentIndex(0)
         # populate layer list
-        self.progressBar.setValue(0)
-        mapCanvas = self._iface.mapCanvas()
-        self._loadingLayer = True
-        for layer in self.sourceLayers():
-            self.uLayerName.addItem(layer.name(),layer)
-        self.uLayerName.setCurrentIndex(-1)
-        self._loadingLayer = False
         if self.uLayerName.count() <= 0:
             raise ContourError("There are no layers suitable for contouring.\n"+
                               "(That is, point layers with numeric attributes)")
-        self.enableOkButton()
         self.setupCurrentLayer( mapCanvas.currentLayer() )
         if self.uLayerName.currentIndex() < 0 and self.uLayerName.count()==1:
             self.uLayerName.setCurrentIndex(0)
@@ -182,6 +190,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             "Please note : your points datas must be placed on a regular "+
             "grid before calling this plugin, or update your matplotlib "+
             "module to >= 1.0.0\n", title="Minimum version required")
+
+    def close(self):
+        self.saveSettings()
+        QDialog.close(self)
 
     def _isGridded(self):
         """
@@ -236,6 +248,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         try:
             attr = properties.get('SourceLayerAttr')
             self.uDataField.setField(attr)
+            print "layerSet",layerSet.keys()
             if layerSet.has_key('filled'):
                 if layerSet.has_key('lines'):
                     self.uBoth.setChecked(True)
@@ -260,6 +273,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 self.uLevelsList.addItem(level)
             self.uPrecision.setValue(int(properties.get('LabelPrecision')))
             self.uLabelUnits.setText(properties.get('LabelUnits') or '')
+            self.uApplyColors.setChecked( properties.get('ApplyColors') == 'yes' )
+            ramp=self.stringToColorRamp( properties.get('ColorRamp'))
+            if ramp:
+                self.uColorRamp.setSourceColorRamp(ramp)
         finally:
             pass
         self._replaceLayerSet = layerSet
@@ -457,7 +474,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
         except ContourError:
             self.message("Error calculating grid/contours: "+str(sys.exc_info()[1]))
-        except:
+        except ContourGenerationError:
             self.message("Exception encountered: " + str(sys.exc_info()[1])+" (Try thinning points)")
         # self._okButton.setEnabled(False)
 
@@ -565,7 +582,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'MinContour' : str(self.uMinContour.value()),
             'MaxContour' : str(self.uMaxContour.value()),
             'Extend' : str(self.uExtend.itemText(self.uExtend.currentIndex())),
-            'Method' : str(self.uMethod.itemText(self.uMethod.currentIndex()))
+            'Method' : str(self.uMethod.itemText(self.uMethod.currentIndex())),
+            'ApplyColors' : 'yes' if self.uApplyColors.isChecked() else 'no',
+            'ColorRamp' : self.colorRampToString( self.uColorRamp.currentColorRamp())
             }
         self.setContourProperties(layer, properties)
         return layer
@@ -597,7 +616,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'MinContour',
             'MaxContour',
             'Extend',
-            'Method'
+            'Method',
+            'ApplyColors',
+            'ColorRamp'
             ]:
             properties[key] = str(layer.customProperty('ContourPlugin.'+key))
         if not properties['ContourId']:
@@ -734,7 +755,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         levels = self.getLevels()
         try:
             if self._isMPLOk()==True: # If so, we can use the new tricontour fonction
-                cs = plt.tricontour(x, y, z, levels, extend=extend)
+                try:
+                    cs = plt.tricontour(x, y, z, levels, extend=extend)
+                except:
+                    raise ContourGenerationError()
             else:
                 gx = x.reshape(self._nr,self._nc)
                 gy = y.reshape(self._nr,self._nc)
@@ -771,12 +795,18 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def _computeFilledContoursForLevel(self,levels,extend,polygons,oneLevelOnly=False):
         x, y, z = self._data
         if self._isMPLOk()==True: # If so, we can use the new tricontour fonction
-            cs = plt.tricontourf(x, y, z, levels, extend=extend)
+            try:
+                cs = plt.tricontourf(x, y, z, levels, extend=extend)
+            except:
+                raise ContourGenerationError()
         else:
             gx = x.reshape(self._nr,self._nc)
             gy = y.reshape(self._nr,self._nc)
             gz = z.reshape(self._nr,self._nc)
-            cs = plt.contourf(gx, gy, gz, levels, extend=extend)
+            try:
+                cs = plt.contourf(gx, gy, gz, levels, extend=extend)
+            except:
+                raise ContourGenerationError()
         levels = [float(l) for l in cs.levels]
         if extend=='min' or extend=='both':
             levels = np.append([-np.inf,], levels)
@@ -827,6 +857,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         pr = vl.dataProvider()
         fields=pr.fields()
         msg = list()
+        symbols=[]
         for i, level, line in lines:
             levels=unicode(np.round(level,dec))+unicode(self.uLabelUnits.text())
             try:
@@ -836,6 +867,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 feat[zfield]=level
                 feat['label']=levels
                 pr.addFeatures( [ feat ] )
+                symbols.append([level,levels])
             except:
                 msg.append(str(sys.exc_info()[1]))
                 msg.append(levels)
@@ -843,6 +875,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.message("Levels not represented : %s"%", ".join(msg),"Contour issue")
         vl.updateExtents()
         vl.commitChanges()
+        self.applyRenderer(vl,'line',zfield,symbols)
         return vl
 
     def buildFilledContourLayer(self, polygons, asLayers=False):
@@ -860,6 +893,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         pr = vl.dataProvider()
         fields = pr.fields()
         msg = list()
+        symbols=[]
         for i, level_min, level_max, polygon in polygons:
             levels = "%s - %s%s"%(
                 np.round(level_min, dec), 
@@ -877,6 +911,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 feat[zmax]=level_max
                 feat['label']=levels
                 pr.addFeatures( [ feat ] )
+                symbols.append([level_min,levels])
             except:
                 self.message(str(sys.exc_info()[1]))
                 msg.append("%s"%levels)
@@ -884,6 +919,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.message("Levels not represented : %s"%", ".join(msg),"Filled Contour issue")
         vl.updateExtents()
         vl.commitChanges()
+        self.applyRenderer(vl,'polygon',zmin,symbols)
         return vl
 
     def buildLayeredContourLayer(self, polygons, asLayers=False):
@@ -898,6 +934,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         pr = vl.dataProvider()
         fields = pr.fields()
         msg = list()
+        symbols=[]
         for i, level_min, level_max, polygon in polygons:
             levels = "%s"%(np.round(level_min, dec))+self.uLabelUnits.text()
             try:
@@ -910,6 +947,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 feat[zfield]=level_min
                 feat['label']=levels
                 pr.addFeatures( [ feat ] )
+                symbols.append([level_min,levels])
             except:
                 self.message(str(sys.exc_info()[1]))
                 msg.append(levels)
@@ -917,7 +955,31 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.message("Levels not represented : %s"%", ".join(msg),"Layered Contour issue")
         vl.updateExtents()
         vl.commitChanges()
+        self.applyRenderer(vl,'polygon',zfield,symbols)
         return vl
+
+    def applyRenderer( self, layer, type, zfield, zlevels ):
+        if not self.uApplyColors.isChecked():
+            return
+        ramp=self.uColorRamp.currentColorRamp()
+        if ramp is None:
+            return
+        nLevels=len(zlevels)
+        if nLevels < 2:
+            return
+        renderer=QgsCategorizedSymbolRendererV2(zfield)
+        for i, level in enumerate(zlevels):
+            value,label=level
+            color=ramp.color(float(i)/(nLevels-1))
+            symbol=None
+            if type=='line':
+                symbol=QgsLineSymbolV2.createSimple({})
+            else:
+                symbol=QgsFillSymbolV2.createSimple({'outline_style':'no'})
+            symbol.setColor(color)
+            category=QgsRendererCategoryV2(value,symbol,label)
+            renderer.addCategory(category)
+        layer.setRendererV2(renderer)
 
     def getLayerWorkingCopy(self, layer):
         ''' Gets a copy of the map layer to provide an independent provider '''
@@ -929,3 +991,82 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         else:
             self.message("Vector layer is not valid")
 
+    def colorRampToString( self, ramp ):
+        if ramp is None:
+            return '';
+        d=QDomDocument()
+        d.appendChild(QgsSymbolLayerV2Utils.saveColorRamp('ramp',ramp,d))
+        rampdef=d.toString()
+        return rampdef
+
+    def stringToColorRamp( self, rampdef ):
+        try:
+            if '<' not in rampdef:
+                return None
+            d=QDomDocument()
+            d.setContent(rampdef)
+            return QgsSymbolLayerV2Utils.loadColorRamp( d.documentElement() )
+        except:
+            return None
+
+    def saveSettings( self ):
+        settings=QSettings()
+        base='/plugins/contour/'
+        mode=('layers' if self.uLayerContours.isChecked() else
+              'both' if self.uBoth.isChecked() else
+              'filled' if self.uFilledContours.isChecked() else
+              'lines')
+        settings.setValue(base+'mode',mode)
+        settings.setValue(base+'levels',str(self.uLevelsNumber.value()))
+        settings.setValue(base+'extend',str(self.uExtend.itemText(self.uExtend.currentIndex())))
+        settings.setValue(base+'method',str(self.uMethod.itemText(self.uMethod.currentIndex())))
+        settings.setValue(base+'precision',str(self.uPrecision.value()))
+        settings.setValue(base+'units',self.uLabelUnits.text())
+        settings.setValue(base+'applyColors','yes' if self.uApplyColors.isChecked() else 'no')
+        settings.setValue(base+'ramp',self.colorRampToString(self.uColorRamp.currentColorRamp()))
+
+    def loadSettings( self ):
+        settings=QSettings()
+        base='/plugins/contour/'
+        try:
+            mode=settings.value(base+'mode')
+            if mode=='layers' and self.uLayerContours.isVisible():
+                self.uLayerContours.setChecked(True)
+            elif mode=='both':
+                self.uBoth.setChecked(True)
+            elif mode=='filled':
+                self.uFilledContours.setChecked(True)
+            else:
+                self.uLinesContours.setChecked(True)
+
+            levels=settings.value(base+'levels')
+            if levels is not None and levels.isdigit():
+                self.uLevelsNumber.setValue(int(levels))
+
+            extend=settings.value(base+'extend')
+            index = self.uExtend.findText(extend)
+            if index >= 0:
+                self.uExtend.setCurrentIndex(index)
+
+            method=settings.value(base+'method')
+            index = self.uMethod.findText(method)
+            if index >= 0:
+                self.uMethod.setCurrentIndex(index)
+
+            precision=settings.value(base+'precision')
+            if precision is not None and precision.isdigit():
+                self.uPrecision.setValue(int(precision))
+
+            units=settings.value(base+'units')
+            if units is not None:
+                self.uLabelUnits.setText(units)
+
+            applyColors=settings.value(base+'applyColors')
+            self.uApplyColors.setChecked(applyColors=='yes')
+
+            ramp=settings.value(base+'ramp')
+            ramp=self.stringToColorRamp(ramp)
+            if ramp:
+                self.uColorRamp.setSourceColorRamp(ramp)
+        except:
+            pass

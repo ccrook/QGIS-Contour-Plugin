@@ -2,9 +2,9 @@
 name=Contour plugin
 description=Generate contour lines (isolines) and/or filled contours a set of data points.  Requires python modules numpy, matplotlib, and shapely.
 category=Vector
-version=1.2.0
+version=1.3.0
 experimental=False
-qgisMinimumVersion=2.0
+qgisMinimumVersion=2.2
 author=Chris Crook, Lionel Roubeyrie
 email=ccrook@linz.govt.nz
 icon=./contour.png

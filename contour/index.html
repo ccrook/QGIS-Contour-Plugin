@@ -29,7 +29,7 @@
        <img src="contour_dialog.png" alt="Contour dialog" style="float:right"/>
        <p>
        The contour dialog is used to contour point data.  To generate contours, select the required options, then press OK.  More than one set of contours can be generated.  When all the required contours have been generated, press Close to quit the dialog.
-       It's now possible to reopen a previously contoured layer, all options will be automatically imported, and a contoured layer can be modified in place without multiple resulting layers.
+       If a contour layer is selected when the dialog is opened then the original settings will be reloaded and the layer can be updated.
        </p>
        <p>
        The input box is used to select the data to be contoured.  This requires choosing
@@ -60,6 +60,9 @@
        </p>
        <p>
        You can also edit the resulting layer name and the labelling precision in the &quot;Output&quot; box. The &quot;label precision&quot; is a convenient way to format the &quot;label&quot; attribute of the resulting layer, which then can be directly used and displayed in the &quot;Categorized&quot; renderer.  It also is used as the precision of automatically calculated labels.  The Label units text is a string that is appended to the values to create the level label.
+       </p>
+       <p>
+       The resulting layer can be rendered using colours from a selected color ramp.
        </p>
        <p>
        The plugin provides an option of thinning the points before contouring.  This may be necessary
