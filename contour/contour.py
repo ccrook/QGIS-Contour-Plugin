@@ -191,9 +191,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             "grid before calling this plugin, or update your matplotlib "+
             "module to >= 1.0.0\n", title="Minimum version required")
 
-    def close(self):
+    def closeEvent(self,event):
         self.saveSettings()
-        QDialog.close(self)
+        QDialog.closeEvent(self,event)
 
     def _isGridded(self):
         """
