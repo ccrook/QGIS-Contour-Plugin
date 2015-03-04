@@ -291,6 +291,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             ramp=self.stringToColorRamp( properties.get('ColorRamp'))
             if ramp:
                 self.uColorRamp.setSourceColorRamp(ramp)
+            self.uReverseRamp.setChecked( properties.get('ReverseRamp') == 'yes' )
         finally:
             pass
         self._replaceLayerSet = layerSet
@@ -598,7 +599,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'Extend' : str(self.uExtend.itemText(self.uExtend.currentIndex())),
             'Method' : str(self.uMethod.itemText(self.uMethod.currentIndex())),
             'ApplyColors' : 'yes' if self.uApplyColors.isChecked() else 'no',
-            'ColorRamp' : self.colorRampToString( self.uColorRamp.currentColorRamp())
+            'ColorRamp' : self.colorRampToString( self.uColorRamp.currentColorRamp()),
+            'ReverseRamp' : 'yes' if self.uReverseRamp.isChecked() else 'no',
             }
         self.setContourProperties(layer, properties)
         return layer
@@ -632,7 +634,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'Extend',
             'Method',
             'ApplyColors',
-            'ColorRamp'
+            'ColorRamp',
+            'ReverseRamp'
             ]:
             properties[key] = str(layer.customProperty('ContourPlugin.'+key))
         if not properties['ContourId']:
@@ -976,6 +979,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if not self.uApplyColors.isChecked():
             return
         ramp=self.uColorRamp.currentColorRamp()
+        reversed=self.uReverseRamp.isChecked()
         if ramp is None:
             return
         nLevels=len(zlevels)
@@ -984,7 +988,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         renderer=QgsCategorizedSymbolRendererV2(zfield)
         for i, level in enumerate(zlevels):
             value,label=level
-            color=ramp.color(float(i)/(nLevels-1))
+            rampvalue=float(i)/(nLevels-1)
+            if reversed:
+                rampvalue=1.0-rampvalue
+            color=ramp.color(rampvalue)
             symbol=None
             if type=='line':
                 symbol=QgsLineSymbolV2.createSimple({})
@@ -1038,6 +1045,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         settings.setValue(base+'units',self.uLabelUnits.text())
         settings.setValue(base+'applyColors','yes' if self.uApplyColors.isChecked() else 'no')
         settings.setValue(base+'ramp',self.colorRampToString(self.uColorRamp.currentColorRamp()))
+        settings.setValue(base+'reverseRamp','yes' if self.uReverseRamp.isChecked() else 'no')
 
     def loadSettings( self ):
         settings=QSettings()
@@ -1082,5 +1090,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             ramp=self.stringToColorRamp(ramp)
             if ramp:
                 self.uColorRamp.setSourceColorRamp(ramp)
+
+            reverseRamp=settings.value(base+'reverseRamp')
+            self.uReverseRamp.setChecked(reverseRamp=='yes')
         except:
             pass

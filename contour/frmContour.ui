@@ -485,7 +485,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1,0">
           <property name="bottomMargin">
            <number>0</number>
           </property>
@@ -498,6 +498,13 @@
           </item>
           <item>
            <widget class="QgsColorRampComboBox" name="uColorRamp"/>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="uReverseRamp">
+            <property name="text">
+             <string>reverse</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>

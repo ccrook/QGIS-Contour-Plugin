@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'frmContour.ui'
 #
-# Created: Fri Feb 27 14:49:50 2015
+# Created: Thu Mar  5 06:38:03 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_ContourDialog(object):
     def setupUi(self, ContourDialog):
         ContourDialog.setObjectName(_fromUtf8("ContourDialog"))
         ContourDialog.setWindowModality(QtCore.Qt.NonModal)
-        ContourDialog.resize(506, 532)
+        ContourDialog.resize(506, 598)
         ContourDialog.setSizeGripEnabled(True)
         self.gridLayout_3 = QtGui.QGridLayout(ContourDialog)
         self.gridLayout_3.setObjectName(_fromUtf8("gridLayout_3"))
@@ -87,7 +87,6 @@ class Ui_ContourDialog(object):
         self.gridLayout.addLayout(self.formLayout_2, 0, 0, 1, 1)
         self.gridLayout_3.addWidget(self.groupBox_2, 0, 0, 1, 2)
         self.groupBox = QtGui.QGroupBox(ContourDialog)
-        
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
         self.gridLayout_2 = QtGui.QGridLayout(self.groupBox)
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
@@ -117,6 +116,7 @@ class Ui_ContourDialog(object):
         self.uLevelsNumber.setSizePolicy(sizePolicy)
         self.uLevelsNumber.setMinimum(1)
         self.uLevelsNumber.setMaximum(999)
+        self.uLevelsNumber.setProperty("value", 10)
         self.uLevelsNumber.setObjectName(_fromUtf8("uLevelsNumber"))
         self.gridLayout_2.addWidget(self.uLevelsNumber, 1, 1, 1, 1)
         self.uLevelsList = QtGui.QListWidget(self.groupBox)
@@ -248,6 +248,9 @@ class Ui_ContourDialog(object):
         self.uColorRamp = gui.QgsColorRampComboBox(self.groupBox_3)
         self.uColorRamp.setObjectName(_fromUtf8("uColorRamp"))
         self.horizontalLayout_4.addWidget(self.uColorRamp)
+        self.uReverseRamp = QtGui.QCheckBox(self.groupBox_3)
+        self.uReverseRamp.setObjectName(_fromUtf8("uReverseRamp"))
+        self.horizontalLayout_4.addWidget(self.uReverseRamp)
         self.horizontalLayout_4.setStretch(1, 1)
         self.formLayout.setLayout(2, QtGui.QFormLayout.FieldRole, self.horizontalLayout_4)
         self.label_13 = QtGui.QLabel(self.groupBox_3)
@@ -323,6 +326,7 @@ class Ui_ContourDialog(object):
         self.uPrecision.setStatusTip(_translate("ContourDialog", "Number of levels between min and max value (from data field)", None))
         self.label_12.setText(_translate("ContourDialog", "Label units text ", None))
         self.label_9.setText(_translate("ContourDialog", "Label precision", None))
+        self.uReverseRamp.setText(_translate("ContourDialog", "reverse", None))
         self.label_13.setText(_translate("ContourDialog", "Apply colors", None))
 
 from qgis import gui
