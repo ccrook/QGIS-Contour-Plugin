@@ -36,11 +36,16 @@ import string
 import math
 import re
 import inspect
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.mlab import griddata
-from shapely.geometry import MultiLineString, MultiPolygon
+
+mplAvailable=True
+try:
+    import numpy as np
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    from matplotlib.mlab import griddata
+    from shapely.geometry import MultiLineString, MultiPolygon
+except:
+    mplAvailable=False
 
 from frmContour import Ui_ContourDialog
 
@@ -78,6 +83,12 @@ class Contour:
         self._iface = iface
 
     def initGui(self):
+        if not mplAvailable:
+            QMessageBox.warning(self._iface.mainWindow(), "Contour error",
+                "The contour plugin is disabled as it requires python modules"
+                " numpy, matplotlib, and shapely which are not all installed")
+            return
+
         self.action = QAction(QIcon(":/plugins/contour/contour.png"), \
         "Contour", self._iface.mainWindow())
         self.action.setWhatsThis("Generate contours based on point vector data")
@@ -86,9 +97,12 @@ class Contour:
         self._iface.vectorMenu().addAction(self.action)
 
     def unload(self):
-        self._iface.removePluginMenu("&Contour", self.action)
-        self._iface.vectorMenu().removeAction(self.action)
-        self._iface.removeToolBarIcon(self.action)
+        try:
+            self._iface.removePluginMenu("&Contour", self.action)
+            self._iface.vectorMenu().removeAction(self.action)
+            self._iface.removeToolBarIcon(self.action)
+        except:
+            pass
 
     def run(self):
         try:
