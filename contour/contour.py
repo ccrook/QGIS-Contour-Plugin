@@ -27,7 +27,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtXml import QDomDocument
 from qgis.core import *
-# from qgis.gui import QgsEncodingFileDialog
 import resources
 
 import sys
@@ -50,6 +49,10 @@ except:
 from frmContour import Ui_ContourDialog
 
 EPSILON = 1.e-27
+LINES='lines'
+FILLED='filled'
+LAYERS='layers'
+BOTH='both'
 
 def _interpolate(a, b, fraction):
     return a + (b - a)*fraction;
@@ -130,6 +133,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         QDialog.__init__(self)
         self._iface = iface
         self._data = None
+        self._loadedDataDef = None
         self._layer=None
         self._zField = ""
         self._dataIsGrid = False
@@ -178,12 +182,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uLayerName.currentIndexChanged[int].connect(self.uLayerNameUpdate)
         self.uDataField.fieldChanged['QString'].connect(self.uDataFieldUpdate)
         self.uSelectedOnly.toggled.connect(self.reloadData)
-        self.uMinContour.valueChanged[float].connect(self.validMinMax)
-        self.uMaxContour.valueChanged[float].connect(self.validMinMax)
+        self.uMinContour.valueChanged[float].connect(self.computeLevels)
+        self.uMaxContour.valueChanged[float].connect(self.computeLevels)
         self.uLevelsNumber.valueChanged[int].connect(self.computeLevels)
-        self.uLevelsList.itemDoubleClicked[QListWidgetItem].connect(self.validLevel)
+        self.uLevelsList.itemDoubleClicked[QListWidgetItem].connect(self.editLevel)
         self.uButtonBox.helpRequested.connect(self.showHelp)
-        self.uMethod.currentIndexChanged[int].connect(self.changeMethod)
+        self.uMethod.currentIndexChanged[int].connect(self.computeLevels)
         self.uLinesContours.toggled[bool].connect(self.modeToggled)
         self.uFilledContours.toggled[bool].connect(self.modeToggled)
         self.uBoth.toggled[bool].connect(self.modeToggled)
@@ -213,9 +217,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         """
         Check if points data are on a regular grid
         """
-        if self._data == None:
+        data=self.getData()
+        if not data:
             return
-        (x, y, z) = self._data
+        (x, y, z) = data
         l = len(x)
         xd=np.diff(x)
         yd=np.diff(y)
@@ -263,12 +268,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             attr = properties.get('SourceLayerAttr')
             self.uDataField.setField(attr)
             print "layerSet",layerSet.keys()
-            if layerSet.has_key('filled'):
-                if layerSet.has_key('lines'):
+            if layerSet.has_key(FILLED):
+                if layerSet.has_key(LINES):
                     self.uBoth.setChecked(True)
                 else:
                     self.uFilledContours.setChecked(True)
-            if layerSet.has_key('layers'):
+            if layerSet.has_key(LAYERS):
                     self.uLayerContours.setChecked(True)
             else:
                 self.uLinesContours.setChecked(True)
@@ -299,16 +304,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def uLayerNameUpdate(self, index):
         if self._loadingLayer:
             return
-        self._data = None
         self._replaceLayerSet = None
         self._layer = self.uLayerName.itemData(index)
         self.uLayerDescription.setText("")
-        changedLayer = self.getLayerWorkingCopy(self._layer)
-        if not changedLayer:
-           return
+        #changedLayer = self.getLayerWorkingCopy(self._layer)
+        #if not changedLayer:
+        #   return
 
         # Get a default resolution for point thinning
-        extent=changedLayer.extent()
+        extent=self._layer.extent()
         resolution=(extent.width()+extent.height())/20000.0;
         radius=0.000001
         while radius < resolution:
@@ -340,28 +344,18 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def reloadData(self):
         if self._loadingLayer:
             return
-        self._data = None
         self._replaceLayerSet = None
         if not self._layer:
             return
         if not self._zField:
             self.enableOkButton()
             return
-        self.getData(self._layer, self._zField)
-        if not self._data:
+        data=self.getData()
+        if not data:
             self.enableOkButton()
             return
-        z = self._data[2]
-        ndata = len(z)
-        self.uMinContour.setValue(np.min(z))
-        self.uMaxContour.setValue(np.max(z))
-        self.computeLevels()
         self.updateOutputName()
         self.enableOkButton()
-
-    def changeMethod(self, i):
-        if self._layer.name() and self._zField:
-            self.computeLevels()
 
     def updateOutputName(self):
         if self._layer.name() and self._zField:
@@ -370,38 +364,37 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 zf='expr'
             self.uOutputName.setText("%s_%s"%(self._layer.name(), zf ))
 
-    def validMinMax(self):
-        self.computeLevels()
-
-    def validLevel(self, item):
+    def editLevel(self, item):
         val = item.text()
-        z = self._data[2]
-        newval, ok = QInputDialog.getText(self, "Update level", 
-                         "Enter a single level to replace this one,\n"+
-                         "or a space separated list of levels to replace all",
-                         QLineEdit.Normal,
-                         val)
-        if ok:
-            values=newval.split()
-            for v in values:
-                try:
-                    float(v)
-                except:
-                    QMessageBox.warning(self._iface.mainWindow(), "Contour error",
-                                        "Invalid contour value "+v)
+        data=self.getData()
+        if data:
+            z = data[2]
+            newval, ok = QInputDialog.getText(self, "Update level", 
+                             "Enter a single level to replace this one,\n"+
+                             "or a space separated list of levels to replace all",
+                             QLineEdit.Normal,
+                             val)
+            if ok:
+                values=newval.split()
+                for v in values:
+                    try:
+                        float(v)
+                    except:
+                        QMessageBox.warning(self._iface.mainWindow(), "Contour error",
+                                            "Invalid contour value "+v)
+                        return
+                if len(values) < 1:
                     return
-            if len(values) < 1:
-                return
-            if len(values) == 1: 
-                item.setText(newval)
+                if len(values) == 1: 
+                    item.setText(newval)
+                    self.enableOkButton()
+                    return
+                values.sort(key=float)
+                self.uLevelsNumber.setValue(len(values))
+                self.uLevelsList.clear()
+                for v in values:
+                    self.uLevelsList.addItem(v)
                 self.enableOkButton()
-                return
-            values.sort(key=float)
-            self.uLevelsNumber.setValue(len(values))
-            self.uLevelsList.clear()
-            for v in values:
-                self.uLevelsList.addItem(v)
-            self.enableOkButton()
 
     def computeLevels(self):
         method = str(self.uMethod.itemText(self.uMethod.currentIndex()))
@@ -417,18 +410,20 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                         float(self.uMaxContour.value()),
                         self.uLevelsNumber.value())
 
-        if method == "Quantile" and self._data:
-            values = np.sort(self._data[2].flatten())
-            values = values[(float(self.uMinContour.value()) <= values) & (values <= self.uMaxContour.value())]
-            if values.size > 1:
-                levels=list()
-                for per in np.linspace(0, 100, self.uLevelsNumber.value()):
-                    idx = per /100. * (values.shape[0] - 1)
-                    if (idx % 1 == 0):
-                        levels.append(values[idx])
-                    else:
-                        v = _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
-                        levels.append(v)
+        if method == "Quantile":
+            data=self.getData(False)
+            if data:
+                values = np.sort(data[2].flatten())
+                values = values[(float(self.uMinContour.value()) <= values) & (values <= self.uMaxContour.value())]
+                if values.size > 1:
+                    levels=list()
+                    for per in np.linspace(0, 100, self.uLevelsNumber.value()):
+                        idx = per /100. * (values.shape[0] - 1)
+                        if (idx % 1 == 0):
+                            levels.append(values[idx])
+                        else:
+                            v = _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
+                            levels.append(v)
 
         self.uLevelsList.clear()
         dec = self.uPrecision.value()
@@ -471,7 +466,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     self._replaceLayerSet = set
                     replaceContourId = self.layerSetContourId(set)
                     break
-            self.reloadThinnedData()
             if self.uLinesContours.isChecked():
                 self.makeContours()
             elif self.uFilledContours.isChecked():
@@ -506,7 +500,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         message = None
         if self.uLayerName.currentText() == "":
             message = "Please specify vector layer"
-        if (self.uDataField.currentText() == "") or (self._data == None):
+        if (self.uDataField.currentText() == ""):
             message = "Please specify data field"
         if message != None:
             raise ContourError(message)
@@ -521,16 +515,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def sourceLayers(self):
         for layer in QgsMapLayerRegistry.instance().mapLayers().values():
             if (layer.type() == layer.VectorLayer) and (layer.geometryType() == QGis.Point):
-                if self.getFieldList(layer):
-                    yield layer
-
-    def getFieldList(self, vlayer):
-        numberfields = []
-        for f in vlayer.pendingFields():
-            typ = unicode(f.typeName())[0:3].lower()
-            if typ in ['int','dou','rea','flo','num']:
-                numberfields.append(unicode(f.name()))
-        return numberfields
+                yield layer
 
     def getLevels(self):
         list = self.uLevelsList
@@ -701,77 +686,98 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             clayer = self.buildFilledContourLayer(polygons)
         self.addLayer(clayer)
 
+    def dataChanged( self ):
+        data=self.getData()
+        if data:
+            z = data[2]
+            self.uMinContour.setValue(np.min(z))
+            self.uMaxContour.setValue(np.max(z))
 
-    def getData(self, layer, zField):
-        self._gridData = None
-        self._data=None
-        inLayer = self.getLayerWorkingCopy(layer)
-        self._crs = inLayer.crs()
-        fids=None
-        if self.uSelectedOnly.isChecked():
-            fids=set(layer.selectedFeaturesIds())
+    def getData(self):
+        layer=self._layer
+        zField=self._zField
+        if not layer:
+            return None
+        if not zField:
+            return None
 
-        self.progressBar.setRange(0, layer.featureCount())
-        count = 0
-        x = list()
-        y = list()
-        z = list()
+        selectedOnly = self.uSelectedOnly.isChecked()
+        radius=self.uThinRadius.value() if self.uThinPoints.isChecked() else 0.0
+
+        dataDef=(layer.id(),zField,radius)
+        if dataDef == self._loadedDataDef:
+            return self._data
+
         try:
-            expression=QgsExpression(zField)
-            fields=layer.pendingFields()
-            if expression.hasParserError():
-                raise RuntimeError("Cannot parse "+zField)
-            if not expression.prepare(fields):
-                raise RuntimeError("Cannot prepare "+zField+" with "+str(fields))
-            request = QgsFeatureRequest()
-            request.setSubsetOfAttributes( expression.referencedColumns(),fields)
-            for feat in layer.getFeatures( request ):
-                try:
-                    if fids is not None and feat.id() not in fids:
-                        continue
-                    zval=expression.evaluate(feat)
-                    if zval is not None:
-                        geom = feat.geometry().asPoint()
-                        x.append(geom.x())
-                        y.append(geom.y())
-                        z.append(zval)
-                except:
-                    raise
-                    pass
-                count = count + 1
-                self.progressBar.setValue(count)
+            self._data=None
+            self._gridData = None
+            self._loadedDataDef=dataDef
+            self._crs = layer.crs()
+
+            fids=None
+            if selectedOnly:
+                fids=set(layer.selectedFeaturesIds())
+
+            self.progressBar.setRange(0, layer.featureCount())
+            count = 0
+            x = list()
+            y = list()
+            z = list()
+            try:
+                expression=QgsExpression(zField)
+                if expression.hasParserError():
+                    if layer.fieldNameIndex(zField) >= 0:
+                        zField='"'+zField.replace('"','""')+'"'
+                        expression=QgsExpression(zField)
+                if expression.hasParserError():
+                    raise ContourError("Cannot parse "+zField)
+                fields=layer.pendingFields()
+                if not expression.prepare(fields):
+                    raise ContourError("Cannot prepare "+zField+" with "+str(fields))
+                request = QgsFeatureRequest()
+                request.setSubsetOfAttributes( expression.referencedColumns(),fields)
+                for feat in layer.getFeatures( request ):
+                    try:
+                        if fids is not None and feat.id() not in fids:
+                            continue
+                        zval=expression.evaluate(feat)
+                        if zval is not None:
+                            geom = feat.geometry().asPoint()
+                            x.append(geom.x())
+                            y.append(geom.y())
+                            z.append(zval)
+                    except:
+                        raise
+                        pass
+                    count = count + 1
+                    self.progressBar.setValue(count)
+            finally:
+                self.progressBar.setValue(0)
+
+            if len(x) > 0:
+                x=np.array(x)
+                y=np.array(y)
+                z=np.array(z)
+                if radius > 0:
+                    index=_thindex(x,y,radius)
+                    x=x[index]
+                    y=y[index]
+                    z=z[index]
+                self._data = [x,y,z]
+                self._thinRadius=radius
         finally:
-            self.progressBar.setValue(0)
-
-        if len(x) == 0:
-            return
-        x=np.array(x)
-        y=np.array(y)
-        z=np.array(z)
-        radius=0.0
-        if self.uThinPoints.isChecked():
-            radius=self.uThinRadius.value()
-            if radius > 0:
-                index=_thindex(x,y,radius)
-                x=x[index]
-                y=y[index]
-                z=z[index]
-        self._data = [x,y,z]
-        self._thinRadius=radius
-
-    def reloadThinnedData( self ):
-        radius=0.0
-        if self.uThinPoints.isChecked():
-            radius=self.uThinRadius.value()
-        if self._thinRadius != radius:
-            self.reloadData()
+            self.dataChanged()
+        return self._data
 
     def computeContours(self):
         extend = str(self.uExtend.itemText(self.uExtend.currentIndex()))
-        x, y, z = self._data
+        data=self.getData()
+        if not data:
+            return
+        x, y, z = data
         levels = self.getLevels()
         try:
-            if self._isMPLOk()==True: # If so, we can use the new tricontour fonction
+            if self._isMPLOk()==True: # If so, we can use the tricontour fonction
                 try:
                     cs = plt.tricontour(x, y, z, levels, extend=extend)
                 except:
@@ -798,9 +804,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def computeFilledContours(self,asLayers=False):
         levels = self.getLevels()
+        data=self.getData()
+        if not data:
+            return
         polygons = list()
         if asLayers:
-            maxvalue=np.max(self._data[2])+1000
+            maxvalue=np.max([2])+1000
             for l in levels:
                 self._computeFilledContoursForLevel([l,maxvalue],'none',polygons,True)
         else:
@@ -810,8 +819,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     
     def _computeFilledContoursForLevel(self,levels,extend,polygons,oneLevelOnly=False):
-        x, y, z = self._data
-        if self._isMPLOk()==True: # If so, we can use the new tricontour fonction
+        data=self.getData()
+        if not data:
+            return
+        x, y, z = data
+        if self._isMPLOk()==True: # If so, we can use the tricontour fonction
             try:
                 cs = plt.tricontourf(x, y, z, levels, extend=extend)
             except:
@@ -825,9 +837,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             except:
                 raise ContourGenerationError()
         levels = [float(l) for l in cs.levels]
-        if extend=='min' or extend=='both':
+        if extend=='min' or extend==BOTH:
             levels = np.append([-np.inf,], levels)
-        if extend=='max' or extend=='both':
+        if extend=='max' or extend==BOTH:
             levels = np.append(levels, [np.inf,])
         # self.progressBar.setRange(0, len(cs.collections))
         for i, polygon in enumerate(cs.collections):
@@ -866,7 +878,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         dec = self.uPrecision.value()
         name = "%s"%str(self.uOutputName.text())
         zfield=self._zField
-        vl = self.createVectorLayer("MultiLineString", name, 'lines',
+        vl = self.createVectorLayer("MultiLineString", name, LINES,
                                    [('index',int),
                                     (zfield,float),
                                     ('label',str)
@@ -901,7 +913,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         zField = self._zField
         zmin=zField+'_min'
         zmax=zField+'_max'
-        vl = self.createVectorLayer("MultiPolygon", name, 'filled',
+        vl = self.createVectorLayer("MultiPolygon", name, FILLED,
                                    [('index',int),
                                     (zmin,float),
                                     (zmax,float),
@@ -943,7 +955,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         dec = self.uPrecision.value()
         name = "%s"%str(self.uOutputName.text())
         zfield = self._zField
-        vl = self.createVectorLayer("MultiPolygon", name, 'layers',
+        vl = self.createVectorLayer("MultiPolygon", name, LAYERS,
                                    [('index',int),
                                     (zfield,float),
                                     ('label',str)
@@ -1002,15 +1014,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             renderer.addCategory(category)
         layer.setRendererV2(renderer)
 
-    def getLayerWorkingCopy(self, layer):
-        ''' Gets a copy of the map layer to provide an independent provider '''
-        vlayer = layer
-        if layer.dataProvider().name() != "memory":
-            vlayer = self.createLayer(layer.source(),  layer.name(),  layer.dataProvider().name())
-        if vlayer and vlayer.isValid():
-            return vlayer
-        else:
-            self.message("Vector layer is not valid")
+#    def getLayerWorkingCopy(self, layer):
+#        ''' Gets a copy of the map layer to provide an independent provider '''
+#        vlayer = layer
+#        if layer.dataProvider().name() != "memory":
+#            vlayer = self.createLayer(layer.source(),  layer.name(),  layer.dataProvider().name())
+#        if vlayer and vlayer.isValid():
+#            return vlayer
+#        else:
+#            self.message("Vector layer is not valid")
 
     def colorRampToString( self, ramp ):
         if ramp is None:
@@ -1033,10 +1045,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def saveSettings( self ):
         settings=QSettings()
         base='/plugins/contour/'
-        mode=('layers' if self.uLayerContours.isChecked() else
-              'both' if self.uBoth.isChecked() else
-              'filled' if self.uFilledContours.isChecked() else
-              'lines')
+        mode=(LAYERS if self.uLayerContours.isChecked() else
+              BOTH if self.uBoth.isChecked() else
+              FILLED if self.uFilledContours.isChecked() else
+              LINES)
         settings.setValue(base+'mode',mode)
         settings.setValue(base+'levels',str(self.uLevelsNumber.value()))
         settings.setValue(base+'extend',str(self.uExtend.itemText(self.uExtend.currentIndex())))
@@ -1052,11 +1064,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         base='/plugins/contour/'
         try:
             mode=settings.value(base+'mode')
-            if mode=='layers' and self.uLayerContours.isVisible():
+            if mode==LAYERS and self.uLayerContours.isVisible():
                 self.uLayerContours.setChecked(True)
-            elif mode=='both':
+            elif mode==BOTH:
                 self.uBoth.setChecked(True)
-            elif mode=='filled':
+            elif mode==FILLED:
                 self.uFilledContours.setChecked(True)
             else:
                 self.uLinesContours.setChecked(True)
