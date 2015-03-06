@@ -267,13 +267,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         try:
             attr = properties.get('SourceLayerAttr')
             self.uDataField.setField(attr)
-            print "layerSet",layerSet.keys()
             if layerSet.has_key(FILLED):
                 if layerSet.has_key(LINES):
                     self.uBoth.setChecked(True)
                 else:
                     self.uFilledContours.setChecked(True)
-            if layerSet.has_key(LAYERS):
+            elif layerSet.has_key(LAYERS):
                     self.uLayerContours.setChecked(True)
             else:
                 self.uLinesContours.setChecked(True)
@@ -307,9 +306,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self._replaceLayerSet = None
         self._layer = self.uLayerName.itemData(index)
         self.uLayerDescription.setText("")
-        #changedLayer = self.getLayerWorkingCopy(self._layer)
-        #if not changedLayer:
-        #   return
 
         # Get a default resolution for point thinning
         extent=self._layer.extent()
@@ -533,19 +529,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         pl.deleteAttributes(pl.attributeIndexes())
         layer.updateFields()
 
-    def createLayer( self, source, name, provider ):
-        # Need to avoid prompting for CRS when creating a vector layer.
-        settings = QSettings()
-        prjSetting = settings.value("/Projections/defaultBehaviour")
-        layer = None
-        try:
-            settings.setValue("/Projections/defaultBehaviour", '')
-            layer = QgsVectorLayer(source, name, provider)
-        finally:
-            if prjSetting:
-                settings.setValue("/Projections/defaultBehaviour", prjSetting)
-        return layer
-
     def createVectorLayer(self, type, name, mode,fields):
         layer = None
         if self._replaceLayerSet:
@@ -554,7 +537,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if layer:
             self.clearLayer(layer)
         else:
-            layer = self.createLayer(type, name, "memory")
+            url=type+'?crs=internal:'+str(self._crs.srsid())
+            layer = QgsVectorLayer(url, name, "memory")
 
         if not layer:
             raise ContourError("Could not create layer for contours")
@@ -1013,16 +997,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             category=QgsRendererCategoryV2(value,symbol,label)
             renderer.addCategory(category)
         layer.setRendererV2(renderer)
-
-#    def getLayerWorkingCopy(self, layer):
-#        ''' Gets a copy of the map layer to provide an independent provider '''
-#        vlayer = layer
-#        if layer.dataProvider().name() != "memory":
-#            vlayer = self.createLayer(layer.source(),  layer.name(),  layer.dataProvider().name())
-#        if vlayer and vlayer.isValid():
-#            return vlayer
-#        else:
-#            self.message("Vector layer is not valid")
 
     def colorRampToString( self, ramp ):
         if ramp is None:
