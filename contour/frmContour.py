@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'frmContour.ui'
 #
-# Created: Thu Mar  5 06:38:03 2015
+# Created: Sat Mar 28 07:50:38 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_ContourDialog(object):
     def setupUi(self, ContourDialog):
         ContourDialog.setObjectName(_fromUtf8("ContourDialog"))
         ContourDialog.setWindowModality(QtCore.Qt.NonModal)
-        ContourDialog.resize(506, 598)
+        ContourDialog.resize(506, 602)
         ContourDialog.setSizeGripEnabled(True)
         self.gridLayout_3 = QtGui.QGridLayout(ContourDialog)
         self.gridLayout_3.setObjectName(_fromUtf8("gridLayout_3"))
@@ -222,10 +222,17 @@ class Ui_ContourDialog(object):
         sizePolicy.setHeightForWidth(self.uPrecision.sizePolicy().hasHeightForWidth())
         self.uPrecision.setSizePolicy(sizePolicy)
         self.uPrecision.setMinimum(0)
-        self.uPrecision.setMaximum(4)
+        self.uPrecision.setMaximum(10)
         self.uPrecision.setProperty("value", 4)
         self.uPrecision.setObjectName(_fromUtf8("uPrecision"))
         self.horizontalLayout_2.addWidget(self.uPrecision)
+        self.label_14 = QtGui.QLabel(self.groupBox_3)
+        self.label_14.setObjectName(_fromUtf8("label_14"))
+        self.horizontalLayout_2.addWidget(self.label_14)
+        self.uTrimZeroes = QtGui.QCheckBox(self.groupBox_3)
+        self.uTrimZeroes.setText(_fromUtf8(""))
+        self.uTrimZeroes.setObjectName(_fromUtf8("uTrimZeroes"))
+        self.horizontalLayout_2.addWidget(self.uTrimZeroes)
         self.label_12 = QtGui.QLabel(self.groupBox_3)
         self.label_12.setObjectName(_fromUtf8("label_12"))
         self.horizontalLayout_2.addWidget(self.label_12)
@@ -289,10 +296,12 @@ class Ui_ContourDialog(object):
         ContourDialog.setTabOrder(self.uMethod, self.uLevelsList)
         ContourDialog.setTabOrder(self.uLevelsList, self.uOutputName)
         ContourDialog.setTabOrder(self.uOutputName, self.uPrecision)
-        ContourDialog.setTabOrder(self.uPrecision, self.uLabelUnits)
+        ContourDialog.setTabOrder(self.uPrecision, self.uTrimZeroes)
+        ContourDialog.setTabOrder(self.uTrimZeroes, self.uLabelUnits)
         ContourDialog.setTabOrder(self.uLabelUnits, self.uApplyColors)
         ContourDialog.setTabOrder(self.uApplyColors, self.uColorRamp)
-        ContourDialog.setTabOrder(self.uColorRamp, self.uButtonBox)
+        ContourDialog.setTabOrder(self.uColorRamp, self.uReverseRamp)
+        ContourDialog.setTabOrder(self.uReverseRamp, self.uButtonBox)
 
     def retranslateUi(self, ContourDialog):
         ContourDialog.setWindowTitle(_translate("ContourDialog", "Contour", None))
@@ -323,8 +332,9 @@ class Ui_ContourDialog(object):
         self.uMethod.setItemText(2, _translate("ContourDialog", "Manual", None))
         self.groupBox_3.setTitle(_translate("ContourDialog", "Output", None))
         self.label_8.setText(_translate("ContourDialog", "Layer name", None))
-        self.uPrecision.setStatusTip(_translate("ContourDialog", "Number of levels between min and max value (from data field)", None))
-        self.label_12.setText(_translate("ContourDialog", "Label units text ", None))
+        self.uPrecision.setStatusTip(_translate("ContourDialog", "Number of decimal places shown in labels", None))
+        self.label_14.setText(_translate("ContourDialog", "Trim zeroes", None))
+        self.label_12.setText(_translate("ContourDialog", "Units", None))
         self.label_9.setText(_translate("ContourDialog", "Label precision", None))
         self.uReverseRamp.setText(_translate("ContourDialog", "reverse", None))
         self.label_13.setText(_translate("ContourDialog", "Apply colors", None))

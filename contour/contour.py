@@ -185,6 +185,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uMinContour.valueChanged[float].connect(self.computeLevels)
         self.uMaxContour.valueChanged[float].connect(self.computeLevels)
         self.uLevelsNumber.valueChanged[int].connect(self.computeLevels)
+        self.uPrecision.valueChanged[int].connect(self.updatePrecision)
+        self.uTrimZeroes.toggled[bool].connect(self.updatePrecision)
         self.uLevelsList.itemDoubleClicked[QListWidgetItem].connect(self.editLevel)
         self.uButtonBox.helpRequested.connect(self.showHelp)
         self.uMethod.currentIndexChanged[int].connect(self.computeLevels)
@@ -242,6 +244,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         version = [int(i) for i in mpl.__version__.split('.')[0:2]]
         return version >= [1, 0]
 
+    def updatePrecision( self, ndp ):
+        ndp=self.uPrecision.value()
+        self.uMinContour.setDecimals( ndp )
+        self.uMaxContour.setDecimals( ndp )
+
     def setupCurrentLayer( self, layer ):
         if not layer:
             return
@@ -290,6 +297,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             for level in levels:
                 self.uLevelsList.addItem(level)
             self.uPrecision.setValue(int(properties.get('LabelPrecision')))
+            self.uTrimZeroes.setValue(properties.get('TrimZeroes') == 'yes' )
             self.uLabelUnits.setText(properties.get('LabelUnits') or '')
             self.uApplyColors.setChecked( properties.get('ApplyColors') == 'yes' )
             ramp=self.stringToColorRamp( properties.get('ColorRamp'))
@@ -407,7 +415,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                         self.uLevelsNumber.value())
 
         if method == "Quantile":
-            data=self.getData(False)
+            data=self.getData()
             if data:
                 values = np.sort(data[2].flatten())
                 values = values[(float(self.uMinContour.value()) <= values) & (values <= self.uMaxContour.value())]
@@ -422,9 +430,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                             levels.append(v)
 
         self.uLevelsList.clear()
-        dec = self.uPrecision.value()
         for i in range(0, len(levels)):
-            self.uLevelsList.addItem(str(np.round(levels[i],dec)))
+            self.uLevelsList.addItem(self.formatLevel(levels[i]))
         self.enableOkButton()
 
     def modeToggled(self,enabled):
@@ -562,6 +569,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'Mode' : mode,
             'Levels' : levels,
             'LabelPrecision' : str(self.uPrecision.value()),
+            'TrimZeroes' : 'yes' if self.uTrimZeroes.isChecked() else 'no',
             'LabelUnits' : unicode(self.uLabelUnits.text()),
             'MinContour' : str(self.uMinContour.value()),
             'MaxContour' : str(self.uMaxContour.value()),
@@ -858,8 +866,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         y = point[1] + EPSILON*np.random.random()
         return [x, y]
 
+    def formatLevel( self, level ):
+        ndp=self.uPrecision.value()
+        trim=self.uTrimZeroes.isChecked()
+        if trim:
+            return unicode(np.round(level,ndp))
+        else:
+            return "{1:.{0}f}".format(ndp,level)
+
     def buildContourLayer(self, lines):
-        dec = self.uPrecision.value()
         name = "%s"%str(self.uOutputName.text())
         zfield=self._zField
         vl = self.createVectorLayer("MultiLineString", name, LINES,
@@ -872,7 +887,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         for i, level, line in lines:
-            levels=unicode(np.round(level,dec))+unicode(self.uLabelUnits.text())
+            levels=self.formatLevel(level)+self.uLabelUnits.text()
             try:
                 feat = QgsFeature(fields)
                 feat.setGeometry(QgsGeometry.fromWkt(MultiLineString(line).to_wkt()))
@@ -892,7 +907,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         return vl
 
     def buildFilledContourLayer(self, polygons, asLayers=False):
-        dec = self.uPrecision.value()
         name = "%s"%str(self.uOutputName.text())
         zField = self._zField
         zmin=zField+'_min'
@@ -908,11 +922,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         for i, level_min, level_max, polygon in polygons:
-            levels = "%s - %s%s"%(
-                np.round(level_min, dec), 
-                np.round(level_max, dec),
-                self.uLabelUnits.text()
-            )
+            levels = (
+                self.formatLevel(level_min) + " - " +
+                self.formatLevel(level_max) + self.uLabelUnits.text()
+                )
             try:
                 feat = QgsFeature(fields)
                 try:
@@ -936,7 +949,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         return vl
 
     def buildLayeredContourLayer(self, polygons, asLayers=False):
-        dec = self.uPrecision.value()
         name = "%s"%str(self.uOutputName.text())
         zfield = self._zField
         vl = self.createVectorLayer("MultiPolygon", name, LAYERS,
@@ -949,7 +961,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         for i, level_min, level_max, polygon in polygons:
-            levels = "%s"%(np.round(level_min, dec))+self.uLabelUnits.text()
+            levels = self.formatLevel(level)+self.uLabelUnits.text()
             try:
                 feat = QgsFeature(fields)
                 try:
@@ -1028,6 +1040,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         settings.setValue(base+'extend',str(self.uExtend.itemText(self.uExtend.currentIndex())))
         settings.setValue(base+'method',str(self.uMethod.itemText(self.uMethod.currentIndex())))
         settings.setValue(base+'precision',str(self.uPrecision.value()))
+        settings.setValue(base+'trimZeroes','yes' if self.uTrimZeroes.isChecked() else 'no')
         settings.setValue(base+'units',self.uLabelUnits.text())
         settings.setValue(base+'applyColors','yes' if self.uApplyColors.isChecked() else 'no')
         settings.setValue(base+'ramp',self.colorRampToString(self.uColorRamp.currentColorRamp()))
@@ -1063,7 +1076,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
             precision=settings.value(base+'precision')
             if precision is not None and precision.isdigit():
-                self.uPrecision.setValue(int(precision))
+                ndp=int(precision)
+                self.uPrecision.setValue(ndp)
+                self.uMinContour.setDecimals( ndp )
+                self.uMaxContour.setDecimals( ndp )
 
             units=settings.value(base+'units')
             if units is not None:
@@ -1079,5 +1095,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
             reverseRamp=settings.value(base+'reverseRamp')
             self.uReverseRamp.setChecked(reverseRamp=='yes')
+
+            trimZeroes=settings.value(base+'trimZeroes')
+            self.uTrimZeroes.setChecked(trimZeroes=='yes')
         except:
             pass
