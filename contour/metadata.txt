@@ -1,8 +1,16 @@
 [general]
 name=Contour plugin
-description=Generate contour lines (isolines) and/or filled contours a set of data points.  Requires python modules numpy, matplotlib, and shapely.
+description=Generate contours of set of data points. 
+about=Generate contour lines (isolines) and/or filled contours 
+  of a field or expression on a point vector layer.  
+  Contours can be rendered with a ramp color.
+  The contours are written to a memory (scratch) layer.  If the 
+  MemoryLayerSaver plugin is installed these are saved with the
+  QGIS project.  Otherwise they can be saved to another persistant 
+  format.
+  Requires python modules numpy, matplotlib, and shapely.
 category=Vector
-version=1.3.2
+version=1.3.3
 experimental=False
 qgisMinimumVersion=2.2
 author=Chris Crook, Lionel Roubeyrie

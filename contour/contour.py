@@ -890,7 +890,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             levels=self.formatLevel(level)+self.uLabelUnits.text()
             try:
                 feat = QgsFeature(fields)
-                feat.setGeometry(QgsGeometry.fromWkt(MultiLineString(line).to_wkt()))
+                try:
+                    feat.setGeometry(QgsGeometry.fromWkt(MultiLineString(line).to_wkt()))
+                except:
+                    pass
                 feat['index']=i
                 feat[zfield]=level
                 feat['label']=levels
