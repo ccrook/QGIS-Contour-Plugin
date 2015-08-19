@@ -297,7 +297,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             for level in levels:
                 self.uLevelsList.addItem(level)
             self.uPrecision.setValue(int(properties.get('LabelPrecision')))
-            self.uTrimZeroes.setValue(properties.get('TrimZeroes') == 'yes' )
+            self.uTrimZeroes.setChecked(properties.get('TrimZeroes') == 'yes' )
             self.uLabelUnits.setText(properties.get('LabelUnits') or '')
             self.uApplyColors.setChecked( properties.get('ApplyColors') == 'yes' )
             ramp=self.stringToColorRamp( properties.get('ColorRamp'))
