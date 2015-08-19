@@ -335,14 +335,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         haveSelected=self._layer.selectedFeatureCount() > 0
         self.uSelectedOnly.setChecked(haveSelected)
         self.uSelectedOnly.setEnabled(haveSelected)
-        self.uDataField.setLayer( self._layer )
         self._loadingLayer=False
-        #if self.uDataField.count() == 1:
-        #    self.uDataField.setCurrentIndex(0)
+        self.uDataField.setLayer( self._layer )
+        # Force an update as setLayer may set value but not trigger update
+        self.uDataFieldUpdate("")
         self.enableOkButton()
 
     def uDataFieldUpdate(self, inputField):
-        self._zField = inputField
+        self._zField,isExpression,isValid = self.uDataField.currentField()
         self.reloadData()
 
     def reloadData(self):
@@ -469,20 +469,25 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     self._replaceLayerSet = set
                     replaceContourId = self.layerSetContourId(set)
                     break
-            if self.uLinesContours.isChecked():
-                self.makeContours()
-            elif self.uFilledContours.isChecked():
-                self.makeFilledContours()
-            elif self.uBoth.isChecked():
-                self.makeFilledContours()
-                self.makeContours()
-            elif self.uLayerContours.isChecked():
-                self.makeFilledContours(True)
-            oldLayerSet = self.contourLayerSet( replaceContourId )
-            if oldLayerSet:
-                for layer in oldLayerSet.values():
-                    QgsMapLayerRegistry.instance().removeMapLayer( layer.id() )
-            self._replaceLayerSet = self.contourLayerSet(self._contourId)
+
+            try:
+                QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+                if self.uLinesContours.isChecked():
+                    self.makeContours()
+                elif self.uFilledContours.isChecked():
+                    self.makeFilledContours()
+                elif self.uBoth.isChecked():
+                    self.makeFilledContours()
+                    self.makeContours()
+                elif self.uLayerContours.isChecked():
+                    self.makeFilledContours(True)
+                oldLayerSet = self.contourLayerSet( replaceContourId )
+                if oldLayerSet:
+                    for layer in oldLayerSet.values():
+                        QgsMapLayerRegistry.instance().removeMapLayer( layer.id() )
+                self._replaceLayerSet = self.contourLayerSet(self._contourId)
+            finally:
+                QApplication.restoreOverrideCursor()
 
         except ContourError:
             self.message("Error calculating grid/contours: "+str(sys.exc_info()[1]))
@@ -667,11 +672,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def makeContours(self):
         lines = self.computeContours()
+        if lines is None:
+            return
         clayer =  self.buildContourLayer(lines)
         self.addLayer(clayer)
 
     def makeFilledContours(self, asLayers=False):
         polygons = self.computeFilledContours( asLayers )
+        if polygons is None:
+            return
         if asLayers:
             clayer = self.buildLayeredContourLayer(polygons)
         else:
@@ -768,8 +777,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             return
         x, y, z = data
         levels = self.getLevels()
+        if not levels:
+            return
         try:
-            if self._isMPLOk()==True: # If so, we can use the tricontour fonction
+            if self._isMPLOk()==True: # If so, we can use the tricontour function
                 try:
                     cs = plt.tricontour(x, y, z, levels, extend=extend)
                 except:
@@ -783,7 +794,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             raise
         lines = list()
         levels = [float(l) for l in cs.levels]
-        self.progressBar.setRange(0, len(cs.collections))
         for i, line in enumerate(cs.collections):
             linestrings = []
             for path in line.get_paths():
@@ -791,11 +801,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     linestrings.append(path.vertices)
             lines.append([ i, levels[i], linestrings])
             self.progressBar.setValue(i+1)
-        self.progressBar.setValue(0)
         return lines
 
     def computeFilledContours(self,asLayers=False):
         levels = self.getLevels()
+        if not levels:
+            return
         data=self.getData()
         if not data:
             return
@@ -996,7 +1007,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         nLevels=len(zlevels)
         if nLevels < 2:
             return
-        renderer=QgsCategorizedSymbolRendererV2(zfield)
+        renderer=QgsCategorizedSymbolRendererV2('index')
         for i, level in enumerate(zlevels):
             value,label=level
             rampvalue=float(i)/(nLevels-1)
@@ -1009,7 +1020,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             else:
                 symbol=QgsFillSymbolV2.createSimple({'outline_style':'no'})
             symbol.setColor(color)
-            category=QgsRendererCategoryV2(value,symbol,label)
+            category=QgsRendererCategoryV2(i,symbol,label)
             renderer.addCategory(category)
         layer.setRendererV2(renderer)
 
