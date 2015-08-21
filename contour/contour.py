@@ -113,7 +113,7 @@ class Contour:
             dlg.exec_()
         except ContourError:
             QMessageBox.warning(self._iface.mainWindow(), "Contour error",
-                str(sys.exc_info()[1]))
+                unicode(sys.exc_info()[1]))
 
 ###########################################################
 
@@ -401,7 +401,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 self.enableOkButton()
 
     def computeLevels(self):
-        method = str(self.uMethod.itemText(self.uMethod.currentIndex()))
+        method = self.uMethod.itemText(self.uMethod.currentIndex())
 
         # If manually setting levels then don't do this work! and leave existing contours 
         # in place.
@@ -490,9 +490,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 QApplication.restoreOverrideCursor()
 
         except ContourError:
-            self.message("Error calculating grid/contours: "+str(sys.exc_info()[1]))
+            self.message("Error calculating grid/contours: "+unicode(sys.exc_info()[1]))
         except ContourGenerationError:
-            self.message("Exception encountered: " + str(sys.exc_info()[1])+" (Try thinning points)")
+            self.message("Exception encountered: " + unicode(sys.exc_info()[1])+" (Try thinning points)")
         # self._okButton.setEnabled(False)
 
     def message(self,text,title="Contour Error"):
@@ -578,8 +578,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'LabelUnits' : unicode(self.uLabelUnits.text()),
             'MinContour' : str(self.uMinContour.value()),
             'MaxContour' : str(self.uMaxContour.value()),
-            'Extend' : str(self.uExtend.itemText(self.uExtend.currentIndex())),
-            'Method' : str(self.uMethod.itemText(self.uMethod.currentIndex())),
+            'Extend' : self.uExtend.itemText(self.uExtend.currentIndex()),
+            'Method' : self.uMethod.itemText(self.uMethod.currentIndex()),
             'ApplyColors' : 'yes' if self.uApplyColors.isChecked() else 'no',
             'ColorRamp' : self.colorRampToString( self.uColorRamp.currentColorRamp()),
             'ReverseRamp' : 'yes' if self.uReverseRamp.isChecked() else 'no',
@@ -619,7 +619,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'ColorRamp',
             'ReverseRamp'
             ]:
-            properties[key] = str(layer.customProperty('ContourPlugin.'+key))
+            properties[key] = unicode(layer.customProperty('ContourPlugin.'+key))
         if not properties['ContourId']:
             return None
         return properties
@@ -734,7 +734,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     raise ContourError("Cannot parse "+zField)
                 fields=layer.pendingFields()
                 if not expression.prepare(fields):
-                    raise ContourError("Cannot prepare "+zField+" with "+str(fields))
+                    raise ContourError("Cannot prepare "+zField+" with "+unicode(fields))
                 request = QgsFeatureRequest()
                 request.setSubsetOfAttributes( expression.referencedColumns(),fields)
                 for feat in layer.getFeatures( request ):
@@ -771,7 +771,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         return self._data
 
     def computeContours(self):
-        extend = str(self.uExtend.itemText(self.uExtend.currentIndex()))
+        extend = self.uExtend.itemText(self.uExtend.currentIndex())
         data=self.getData()
         if not data:
             return
@@ -816,7 +816,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             for l in levels:
                 self._computeFilledContoursForLevel([l,maxvalue],'none',polygons,True)
         else:
-            extend = str(self.uExtend.itemText(self.uExtend.currentIndex()))
+            extend = self.uExtend.itemText(self.uExtend.currentIndex())
             self._computeFilledContoursForLevel(levels,extend,polygons)
         return polygons
 
@@ -886,7 +886,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             return "{1:.{0}f}".format(ndp,level)
 
     def buildContourLayer(self, lines):
-        name = "%s"%str(self.uOutputName.text())
+        name = self.uOutputName.text()
         zfield=self._zField
         vl = self.createVectorLayer("MultiLineString", name, LINES,
                                    [('index',int),
@@ -911,17 +911,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 pr.addFeatures( [ feat ] )
                 symbols.append([level,levels])
             except:
-                msg.append(str(sys.exc_info()[1]))
+                msg.append(unicode(sys.exc_info()[1]))
                 msg.append(levels)
         if len(msg) > 0:
-            self.message("Levels not represented : %s"%", ".join(msg),"Contour issue")
+            self.message("Levels not represented : "+", ".join(msg),"Contour issue")
         vl.updateExtents()
         vl.commitChanges()
         self.applyRenderer(vl,'line',zfield,symbols)
         return vl
 
     def buildFilledContourLayer(self, polygons, asLayers=False):
-        name = "%s"%str(self.uOutputName.text())
+        name = self.uOutputName.text()
         zField = self._zField
         zmin=zField+'_min'
         zmax=zField+'_max'
@@ -953,17 +953,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 pr.addFeatures( [ feat ] )
                 symbols.append([level_min,levels])
             except:
-                self.message(str(sys.exc_info()[1]))
-                msg.append("%s"%levels)
+                self.message(unicode(sys.exc_info()[1]))
+                msg.append(unicode(levels))
         if len(msg) > 0:
-            self.message("Levels not represented : %s"%", ".join(msg),"Filled Contour issue")
+            self.message("Levels not represented : "+", ".join(msg),"Filled Contour issue")
         vl.updateExtents()
         vl.commitChanges()
         self.applyRenderer(vl,'polygon',zmin,symbols)
         return vl
 
     def buildLayeredContourLayer(self, polygons, asLayers=False):
-        name = "%s"%str(self.uOutputName.text())
+        name = "%s"%self.uOutputName.text()
         zfield = self._zField
         vl = self.createVectorLayer("MultiPolygon", name, LAYERS,
                                    [('index',int),
@@ -988,10 +988,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 pr.addFeatures( [ feat ] )
                 symbols.append([level_min,levels])
             except:
-                self.message(str(sys.exc_info()[1]))
+                self.message(unicode(sys.exc_info()[1]))
                 msg.append(levels)
         if len(msg) > 0:
-            self.message("Levels not represented : %s"%", ".join(msg),"Layered Contour issue")
+            self.message("Levels not represented : "+", ".join(msg),"Layered Contour issue")
         vl.updateExtents()
         vl.commitChanges()
         self.applyRenderer(vl,'polygon',zfield,symbols)
@@ -1051,8 +1051,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
               LINES)
         settings.setValue(base+'mode',mode)
         settings.setValue(base+'levels',str(self.uLevelsNumber.value()))
-        settings.setValue(base+'extend',str(self.uExtend.itemText(self.uExtend.currentIndex())))
-        settings.setValue(base+'method',str(self.uMethod.itemText(self.uMethod.currentIndex())))
+        settings.setValue(base+'extend',self.uExtend.itemText(self.uExtend.currentIndex()))
+        settings.setValue(base+'method',self.uMethod.itemText(self.uMethod.currentIndex()))
         settings.setValue(base+'precision',str(self.uPrecision.value()))
         settings.setValue(base+'trimZeroes','yes' if self.uTrimZeroes.isChecked() else 'no')
         settings.setValue(base+'units',self.uLabelUnits.text())
