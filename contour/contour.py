@@ -898,6 +898,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         for i, level, line in lines:
+            level=float(level)
             levels=self.formatLevel(level)+self.uLabelUnits.text()
             try:
                 feat = QgsFeature(fields)
@@ -936,6 +937,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         for i, level_min, level_max, polygon in polygons:
+            level_min=float(level_min)
+            level_max=float(level_max)
             levels = (
                 self.formatLevel(level_min) + " - " +
                 self.formatLevel(level_max) + self.uLabelUnits.text()
@@ -975,6 +978,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         for i, level_min, level_max, polygon in polygons:
+            level_min=float(level_min)
+            level_max=float(level_max)
             levels = self.formatLevel(level)+self.uLabelUnits.text()
             try:
                 feat = QgsFeature(fields)
