@@ -27,6 +27,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtXml import QDomDocument
 from qgis.core import *
+from qgis.gui import QgsMessageBar
 import resources
 
 import sys
@@ -118,10 +119,7 @@ class Contour:
 ###########################################################
 
 class ContourError(Exception):
-    def __init__(self, message):
-        self._message = message
-    def __str__(self):
-        return self._message
+    pass
 
 class ContourGenerationError(Exception):
     pass
@@ -136,10 +134,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self._loadedDataDef = None
         self._layer=None
         self._zField = ""
-        self._dataIsGrid = False
-        self._gridData = None
-        self._nr = None
-        self._nc = None
+        self._dataGridShape = None
         self._gridSaved = False
         self._gridDisplayed = False
         self._zField = ''
@@ -159,6 +154,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uLevelsList.setSortingEnabled(False)
         self.uSelectedOnly.setChecked(False)
         self.uSelectedOnly.setEnabled(False)
+        self.uUseGrid.setEnabled(False)
         self.uColorRamp.populate(QgsStyleV2.defaultStyle())
         self.uDataField.setExpressionDialogTitle("Value to contour")
         self.uLevelsNumber.setMinimum(2)
@@ -182,6 +178,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uLayerName.currentIndexChanged[int].connect(self.uLayerNameUpdate)
         self.uDataField.fieldChanged['QString'].connect(self.uDataFieldUpdate)
         self.uSelectedOnly.toggled.connect(self.reloadData)
+        self.uThinPoints.toggled.connect(self.reloadData)
+        self.uThinRadius.valueChanged[float].connect(self.reloadData)
         self.uMinContour.valueChanged[float].connect(self.computeLevels)
         self.uMaxContour.valueChanged[float].connect(self.computeLevels)
         self.uLevelsNumber.valueChanged[int].connect(self.computeLevels)
@@ -197,29 +195,28 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
         # populate layer list
         if self.uLayerName.count() <= 0:
-            raise ContourError("There are no layers suitable for contouring.\n"+
-                              "(That is, point layers with numeric attributes)")
+            raise ContourError("There are no point geometry layers suitable for contouring.")
         self.setupCurrentLayer( mapCanvas.currentLayer() )
         if self.uLayerName.currentIndex() < 0 and self.uLayerName.count()==1:
             self.uLayerName.setCurrentIndex(0)
         
         # Is MPL version Ok?
         if self._isMPLOk() == False:
-            self.message(text="Your matplotlib python module seems to not have the required "+
-            "version for using the last contouring algorithms. "+
-            "Please note : your points datas must be placed on a regular "+
-            "grid before calling this plugin, or update your matplotlib "+
-            "module to >= 1.0.0\n", title="Minimum version required")
+            self.warnUser("You are using an old version matplotlib - only gridded data is supported")
+
+    def warnUser(self,message):
+        self._iface.messageBar().pushMessage(message, QgsMessageBar.WARNING)
 
     def closeEvent(self,event):
         self.saveSettings()
         QDialog.closeEvent(self,event)
 
-    def _isGridded(self):
+    def checkGridded(self):
         """
         Check if points data are on a regular grid
         """
         data=self.getData()
+        self._dataGridShape=None
         if not data:
             return
         (x, y, z) = data
@@ -230,11 +227,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         ends = np.flatnonzero(xd[0:ld-1]*xd[1:ld]+yd[0:ld-1]*yd[1:ld]<0)+2
         nr = ends[0]
         nc = (len(ends)/2)+1
-        ok = True
-        if (len(ends) < 2) or (nr*nc != l) or (any(ends%nr > 1)):
-           ok = False
-        self._nr = nr
-        self._nc = nc
+        ok = False
+        if (nr >= 2) and (nc >= 2) and (nr*nc == l) and (all(ends%nr <= 1)):
+           ok = True
+           self._dataGridShape=(nc,nr)
         return ok
 
     def _isMPLOk(self):
@@ -489,14 +485,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             finally:
                 QApplication.restoreOverrideCursor()
 
-        except ContourError:
-            self.message("Error calculating grid/contours: "+unicode(sys.exc_info()[1]))
-        except ContourGenerationError:
-            self.message("Exception encountered: " + unicode(sys.exc_info()[1])+" (Try thinning points)")
+        except ContourError as ce:
+            self.warnUser("Error calculating grid/contours: "+ce.message)
+        except ContourGenerationError as cge:
+            self.warnUser("Exception encountered: " + cge.message +" (Try thinning points)")
         # self._okButton.setEnabled(False)
-
-    def message(self,text,title="Contour Error"):
-        QMessageBox.warning(self, title, text)
 
     def showHelp(self):
         file = inspect.getsourcefile(ContourDialog)
@@ -514,9 +507,13 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             raise ContourError(message)
 
     def validateConditions(self):
-        if (self._isMPLOk() == False) and (self._isGridded() == False):
-            message = "This layer does not have a regular data grid and your matplotlib module is not suitable to compute contouring"
-            raise ContourError(message)
+        if self._isMPLOk():
+            return
+        if self._dataGridShape is not None:
+            return
+        message = "This layer does not have a regular data grid and your matplotlib module is not suitable to compute contouring"
+        raise ContourError(message)
+
     #############################################################################
     # Contour calculation code
 
@@ -693,6 +690,19 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             z = data[2]
             self.uMinContour.setValue(np.min(z))
             self.uMaxContour.setValue(np.max(z))
+            gridshape=self._dataGridShape
+            self.uUseGrid.setEnabled(gridshape is not None)
+            self.uUseGrid.setChecked(gridshape is not None)
+            self.uUseGridLabel.setEnabled(gridshape is not None)
+            description='Contouring {0} points'.format(len(z))
+            if gridshape is not None:
+                description=description+' in a {0} x {1} grid'.format(*gridshape)
+            else:
+                description=description+' (not in regular grid)'
+            self.uLayerDescription.setText(description)
+        else:
+            self.uLayerDescription="No data selected for contouring"
+
 
     def getData(self):
         layer=self._layer
@@ -705,13 +715,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         selectedOnly = self.uSelectedOnly.isChecked()
         radius=self.uThinRadius.value() if self.uThinPoints.isChecked() else 0.0
 
-        dataDef=(layer.id(),zField,radius)
+        dataDef=(layer.id(),zField,selectedOnly,radius)
         if dataDef == self._loadedDataDef:
             return self._data
 
         try:
             self._data=None
-            self._gridData = None
             self._loadedDataDef=dataDef
             self._crs = layer.crs()
 
@@ -734,7 +743,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     raise ContourError("Cannot parse "+zField)
                 fields=layer.pendingFields()
                 if not expression.prepare(fields):
-                    raise ContourError("Cannot prepare "+zField+" with "+unicode(fields))
+                    raise ContourError("Cannot evaluate value "+zField)
                 request = QgsFeatureRequest()
                 request.setSubsetOfAttributes( expression.referencedColumns(),fields)
                 for feat in layer.getFeatures( request ):
@@ -766,6 +775,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     z=z[index]
                 self._data = [x,y,z]
                 self._thinRadius=radius
+                self.checkGridded()
+        except ContourError as ce:
+            self.warnUser(ce.message)
         finally:
             self.dataChanged()
         return self._data
@@ -779,19 +791,23 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         levels = self.getLevels()
         if not levels:
             return
-        try:
-            if self._isMPLOk()==True: # If so, we can use the tricontour function
-                try:
-                    cs = plt.tricontour(x, y, z, levels, extend=extend)
-                except:
-                    raise ContourGenerationError()
-            else:
-                gx = x.reshape(self._nr,self._nc)
-                gy = y.reshape(self._nr,self._nc)
-                gz = z.reshape(self._nr,self._nc)
+        usegrid=self._dataGridShape is not None and self.uUseGrid.isChecked()
+        if usegrid:
+            try:
+                gx = x.reshape(self._dataGridShape)
+                gy = y.reshape(self._dataGridShape)
+                gz = z.reshape(self._dataGridShape)
                 cs = plt.contour(gx, gy, gz, levels, extend=extend)
-        except:
-            raise
+            except:
+                raise ContourGenerationError()
+
+        elif self._isMPLOk()==True: # If so, we can use the tricontour function
+            try:
+                cs = plt.tricontour(x, y, z, levels, extend=extend)
+            except:
+                raise ContourGenerationError()
+        else:
+            raise ContourGenerationError()
         lines = list()
         levels = [float(l) for l in cs.levels]
         for i, line in enumerate(cs.collections):
@@ -826,19 +842,22 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if not data:
             return
         x, y, z = data
-        if self._isMPLOk()==True: # If so, we can use the tricontour fonction
+        usegrid=self._dataGridShape is not None and self.uUseGrid.isChecked()
+        if usegrid:
+            gx = x.reshape(self._dataGridShape)
+            gy = y.reshape(self._dataGridShape)
+            gz = z.reshape(self._dataGridShape)
+            try:
+                cs = plt.contourf(gx, gy, gz, levels, extend=extend)
+            except:
+                raise ContourGenerationError()
+        elif self._isMPLOk()==True: # If so, we can use the tricontour fonction
             try:
                 cs = plt.tricontourf(x, y, z, levels, extend=extend)
             except:
                 raise ContourGenerationError()
         else:
-            gx = x.reshape(self._nr,self._nc)
-            gy = y.reshape(self._nr,self._nc)
-            gz = z.reshape(self._nr,self._nc)
-            try:
-                cs = plt.contourf(gx, gy, gz, levels, extend=extend)
-            except:
-                raise ContourGenerationError()
+            raise ContourGenerationError()
         levels = [float(l) for l in cs.levels]
         if extend=='min' or extend==BOTH:
             levels = np.append([-np.inf,], levels)
@@ -915,7 +934,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 msg.append(unicode(sys.exc_info()[1]))
                 msg.append(levels)
         if len(msg) > 0:
-            self.message("Levels not represented : "+", ".join(msg),"Contour issue")
+            self.warnUser("Levels not represented : "+", ".join(msg),"Contour issue")
         vl.updateExtents()
         vl.commitChanges()
         self.applyRenderer(vl,'line',zfield,symbols)
@@ -936,6 +955,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         fields = pr.fields()
         msg = list()
         symbols=[]
+        ninvalid=0
         for i, level_min, level_max, polygon in polygons:
             level_min=float(level_min)
             level_max=float(level_max)
@@ -946,7 +966,16 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 feat = QgsFeature(fields)
                 try:
-                    feat.setGeometry(QgsGeometry.fromWkt(MultiPolygon(polygon).to_wkt()))
+                    geom=MultiPolygon(polygon)
+                    if not geom.is_valid:
+                        # Try buffering to create a valid alternative for geometry
+                        # Test area is not significantly altered
+                        geom2=geom.buffer(0.0)
+                        if geom2.area > 0.0 and abs(1-geom2.area/area) < 0.000001:
+                            geom=geom2
+                        if not geom.is_valid:
+                            ninvalid += 1
+                    feat.setGeometry(QgsGeometry.fromWkt(geom.to_wkt()))
                 except:
                     continue
                 feat['index']=i
@@ -955,11 +984,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 feat['label']=levels
                 pr.addFeatures( [ feat ] )
                 symbols.append([level_min,levels])
-            except:
-                self.message(unicode(sys.exc_info()[1]))
+            except Exception as ex:
+                self.warnUser(ex.message)
                 msg.append(unicode(levels))
         if len(msg) > 0:
-            self.message("Levels not represented : "+", ".join(msg),"Filled Contour issue")
+            self.warnUser("Levels not represented : "+", ".join(msg),"Filled Contour issue")
+        if ninvalid > 0:
+            self.warnUser("Matplotlib contouring routine has creating {0} invalid geometries"
+                          .format(ninvalid))
         vl.updateExtents()
         vl.commitChanges()
         self.applyRenderer(vl,'polygon',zmin,symbols)
@@ -977,6 +1009,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         fields = pr.fields()
         msg = list()
         symbols=[]
+        ninvalid=0
         for i, level_min, level_max, polygon in polygons:
             level_min=float(level_min)
             level_max=float(level_max)
@@ -984,7 +1017,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 feat = QgsFeature(fields)
                 try:
-                    feat.setGeometry(QgsGeometry.fromWkt(MultiPolygon(polygon).to_wkt()))
+                    geom=MultiPolygon(polygon)
+                    if not geom.is_valid:
+                        ninvalid += 1
+                    feat.setGeometry(QgsGeometry.fromWkt(geom.to_wkt()))
                 except:
                     continue
                 feat['index']=i
@@ -992,11 +1028,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 feat['label']=levels
                 pr.addFeatures( [ feat ] )
                 symbols.append([level_min,levels])
-            except:
-                self.message(unicode(sys.exc_info()[1]))
+            except Exception as ex:
+                self.warnUser(ex.message)
                 msg.append(levels)
         if len(msg) > 0:
-            self.message("Levels not represented : "+", ".join(msg),"Layered Contour issue")
+            self.warnUser("Levels not represented : "+", ".join(msg),"Layered Contour issue")
+        if ninvalid > 0:
+            self.warnUser("Matplotlib contouring routine has creating {0} invalid geometries"
+                          .format(ninvalid))
         vl.updateExtents()
         vl.commitChanges()
         self.applyRenderer(vl,'polygon',zfield,symbols)

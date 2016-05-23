@@ -10,7 +10,7 @@ about=Generate contour lines (isolines) and/or filled contours
   format.
   Requires python modules numpy, matplotlib, and shapely.
 category=Vector
-version=1.3.6
+version=1.4.0
 experimental=False
 qgisMinimumVersion=2.4
 author=Chris Crook, Lionel Roubeyrie

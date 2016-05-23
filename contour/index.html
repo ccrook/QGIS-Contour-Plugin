@@ -32,6 +32,13 @@
        If a contour layer is selected when the dialog is opened then the original settings will be reloaded and the layer can be updated.
        </p>
        <p>
+       The plugin can use two different methods for contouring.  For gridded data the plugin can take
+       advantage of the gridded layout to calculate contours more efficiently.  Gridded data does not need
+       to be spaced regularly, but the plugin does require that the data are ordered by rows and columns 
+       (or vice versa).  For data not gridded in this way the plugin will build a Delauney triangulation and
+       then contour based on that. 
+       </p>
+       <p>
        The input box is used to select the data to be contoured.  This requires choosing
        the map layer containing the data (only point layers are available), and the data field of the layer containing the values to be contoured.
        </p>
@@ -70,6 +77,11 @@
        choose a subset of points to use for the contouring.  The point thinning radius is in the 
        units of the coordinate system, typically either degrees or metres.
        </p>
+       <p>
+       The plugin also allows overriding the default contouring method if the data is gridded.  By default it
+       will use a grid based contouring algorithm, but it can be forced to use a triangulation approach 
+       by unchecking the &quot;Use grid based contouring&quot; check box.
+       </p>
        <h2>Warning messages</h2>
        <p>
        The contour plugin may generate a number of warnings.  Most are self expalanatory,
@@ -85,6 +97,16 @@
        <p>
        This is usually due to data containing duplicate points or points near to each other.  This may
        be fixed by using the point thinning option (or trying different thinning radius values).
+       </p>
+       <h3>Matplotlib contouring routine has generated # invalid geometries</h3>
+       <p>
+       The contouring library used by the plugin sometimes generates self-intersecting polygons that 
+       are not valid OGC geometries.  Usually this is due to a series of points in a straight line on
+       the outside boundary of the set of data points (for example in gridded data sets).  This is 
+       especially true if the triangulated contour method is being used.  The plugin
+       will attempt to repair geometries by buffering, but if this fails it will add the invalid geometry
+       to the contour layer.  This can result in rendering errors (for example the polygons not being
+       rendered in some views).  
        </p>
        </div>
         <p>

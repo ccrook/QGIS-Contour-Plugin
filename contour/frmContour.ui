@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>506</width>
-    <height>602</height>
+    <width>478</width>
+    <height>653</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,74 +19,13 @@
   <property name="sizeGripEnabled">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3">
+  <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,1,0,0">
    <item row="0" column="0" colspan="2">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Input</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Apply point thinning</string>
-          </property>
-          <property name="buddy">
-           <cstring>uThinPoints</cstring>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="uThinPoints">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_11">
-          <property name="text">
-           <string>Radius</string>
-          </property>
-          <property name="buddy">
-           <cstring>uThinRadius</cstring>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="uThinRadius">
-          <property name="decimals">
-           <number>6</number>
-          </property>
-          <property name="singleStep">
-           <double>0.000001000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="uLayerDescription">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
+     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0" rowminimumheight="0,0,0,0,0">
       <item row="0" column="0">
        <layout class="QFormLayout" name="formLayout_2">
         <property name="topMargin">
@@ -141,6 +80,107 @@
         </item>
        </layout>
       </item>
+      <item row="2" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Apply point thinning</string>
+          </property>
+          <property name="buddy">
+           <cstring>uThinPoints</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="uThinPoints">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_11">
+          <property name="text">
+           <string>Radius</string>
+          </property>
+          <property name="buddy">
+           <cstring>uThinRadius</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="uThinRadius">
+          <property name="decimals">
+           <number>6</number>
+          </property>
+          <property name="singleStep">
+           <double>0.000001000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <property name="topMargin">
+         <number>7</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="uUseGridLabel">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Use grid based contouring</string>
+          </property>
+          <property name="buddy">
+           <cstring>uUseGrid</cstring>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="uUseGrid">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="uLayerDescription">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -149,7 +189,7 @@
      <property name="title">
       <string>Contouring</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2">
+     <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,1" columnstretch="0,0,1">
       <item row="0" column="0" colspan="3">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
@@ -214,19 +254,6 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2" rowspan="5">
-       <widget class="QListWidget" name="uLevelsList">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="C" country="AnyCountry"/>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="label_5">
         <property name="text">
@@ -266,28 +293,6 @@
         </property>
         <property name="buddy">
          <cstring>uMaxContour</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="uMaxContour">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="C" country="AnyCountry"/>
-        </property>
-        <property name="decimals">
-         <number>4</number>
-        </property>
-        <property name="minimum">
-         <double>-999999999.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>999999999.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -364,6 +369,54 @@
           <string>Manual</string>
          </property>
         </item>
+       </widget>
+      </item>
+      <item row="1" column="2" rowspan="6">
+       <widget class="QListWidget" name="uLevelsList">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="locale">
+         <locale language="C" country="AnyCountry"/>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="uMaxContour">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="locale">
+         <locale language="C" country="AnyCountry"/>
+        </property>
+        <property name="decimals">
+         <number>4</number>
+        </property>
+        <property name="minimum">
+         <double>-999999999.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>999999999.000000000000000</double>
+        </property>
        </widget>
       </item>
      </layout>
@@ -553,13 +606,14 @@
   <tabstop>uSelectedOnly</tabstop>
   <tabstop>uThinPoints</tabstop>
   <tabstop>uThinRadius</tabstop>
+  <tabstop>uUseGrid</tabstop>
   <tabstop>uLinesContours</tabstop>
   <tabstop>uFilledContours</tabstop>
   <tabstop>uBoth</tabstop>
   <tabstop>uLayerContours</tabstop>
   <tabstop>uLevelsNumber</tabstop>
-  <tabstop>uMaxContour</tabstop>
   <tabstop>uMinContour</tabstop>
+  <tabstop>uMaxContour</tabstop>
   <tabstop>uExtend</tabstop>
   <tabstop>uMethod</tabstop>
   <tabstop>uLevelsList</tabstop>
