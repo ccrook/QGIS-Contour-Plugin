@@ -286,19 +286,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     self.uLayerContours.setChecked(True)
             else:
                 self.uLinesContours.setChecked(True)
-            levels = properties.get('Levels').split(';')
-            self.uLevelsNumber.setValue(len(levels))
-            self.uMinContour.setValue(float(properties.get('MinContour')))
-            self.uMaxContour.setValue(float(properties.get('MaxContour')))
             index = self.uMethod.findText(properties.get('Method'))
             if index >= 0:
                 self.uMethod.setCurrentIndex(index)
             index = self.uExtend.findText(properties.get('Extend'))
             if index >= 0:
                 self.uExtend.setCurrentIndex(index)
-            self.uLevelsList.clear()
-            for level in levels:
-                self.uLevelsList.addItem(level)
             self.uPrecision.setValue(int(properties.get('LabelPrecision')))
             self.uTrimZeroes.setChecked(properties.get('TrimZeroes') == 'yes' )
             self.uLabelUnits.setText(properties.get('LabelUnits') or '')
@@ -307,6 +300,13 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             if ramp:
                 self.uColorRamp.setSourceColorRamp(ramp)
             self.uReverseRamp.setChecked( properties.get('ReverseRamp') == 'yes' )
+            self.uMinContour.setValue(float(properties.get('MinContour')))
+            self.uMaxContour.setValue(float(properties.get('MaxContour')))
+            levels = properties.get('Levels').split(';')
+            self.uLevelsNumber.setValue(len(levels))
+            self.uLevelsList.clear()
+            for level in levels:
+                self.uLevelsList.addItem(level)
         finally:
             pass
         self._replaceLayerSet = layerSet
@@ -987,8 +987,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     if not geom.is_valid:
                         # Try buffering to create a valid alternative for geometry
                         # Test area is not significantly altered
+
                         geom2=geom.buffer(0.0)
-                        if geom2.area > 0.0 and abs(1-geom2.area/area) < 0.000001:
+                        if geom2.area > 0.0 and abs(1-geom.area/geom2.area) < 0.000001:
                             geom=geom2
                         if not geom.is_valid:
                             ninvalid += 1
