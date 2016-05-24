@@ -207,6 +207,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def warnUser(self,message):
         self._iface.messageBar().pushMessage(message, QgsMessageBar.WARNING)
 
+    def adviseUser(self,message):
+        self._iface.messageBar().pushMessage(message, QgsMessageBar.INFO,5)
+
     def closeEvent(self,event):
         self.saveSettings()
         QDialog.closeEvent(self,event)
@@ -244,6 +247,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         ndp=self.uPrecision.value()
         self.uMinContour.setDecimals( ndp )
         self.uMaxContour.setDecimals( ndp )
+        if self._data:
+            zval=self._data[2]
+            self.uMinContour.setValue(np.min(zval))
+            self.uMaxContour.setValue(np.max(zval))
 
     def setupCurrentLayer( self, layer ):
         if not layer:
@@ -688,8 +695,18 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         data=self.getData()
         if data:
             z = data[2]
-            self.uMinContour.setValue(np.min(z))
-            self.uMaxContour.setValue(np.max(z))
+            zmin=np.min(z)
+            zmax=np.max(z)
+            ndp=self.uPrecision.value()
+            if zmax-zmin > 0:
+                ndp2=ndp
+                while 10**(-ndp2) > (zmax-zmin)/100 and ndp2 < 10:
+                    ndp2 += 1
+                if ndp2 != ndp:
+                    self.uPrecision.setValue(ndp2)
+                    self.adviseUser("Resetting the label precision to match range of data values")
+            self.uMinContour.setValue(zmin)
+            self.uMaxContour.setValue(zmax)
             gridshape=self._dataGridShape
             self.uUseGrid.setEnabled(gridshape is not None)
             self.uUseGrid.setChecked(gridshape is not None)
@@ -701,7 +718,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 description=description+' (not in regular grid)'
             self.uLayerDescription.setText(description)
         else:
-            self.uLayerDescription="No data selected for contouring"
+            self.uLayerDescription.setText("No data selected for contouring")
 
 
     def getData(self):
