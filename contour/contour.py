@@ -372,7 +372,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.uOutputName.setText("%s_%s"%(self._layer.name(), zf ))
 
     def editLevel(self, item):
-        val = item.text()
+        if QApplication.keyboardModifiers() & Qt.ShiftModifier:
+            list = self.uLevelsList
+            val=' '.join([list.item(i).text() for i in range(0, list.count())])
+        else:
+            val = item.text()
         data=self.getData()
         if data:
             z = data[2]
