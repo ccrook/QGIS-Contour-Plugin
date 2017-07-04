@@ -131,6 +131,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         QDialog.__init__(self)
         self._iface = iface
         self._data = None
+        self._origin = None
         self._loadedDataDef = None
         self._layer=None
         self._zField = ""
@@ -788,6 +789,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             if len(x) > 0:
                 x=np.array(x)
                 y=np.array(y)
+                x0=(x.min()+x.max())/2.0
+                y0=(y.min()+y.max())/2.0
+                x -= x0
+                y -= y0
                 z=np.array(z)
                 if radius > 0:
                     index=_thindex(x,y,radius)
@@ -795,6 +800,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     y=y[index]
                     z=z[index]
                 self._data = [x,y,z]
+                self._origin=[x0,y0]
                 self._thinRadius=radius
                 self.checkGridded()
         except ContourError as ce:
@@ -898,7 +904,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     if len(exterior) < 2:
                         continue
                     p0 = exterior[0]
-                    exterior = np.vstack((exterior, self.epsi_point(p0), self.epsi_point(p0)))
                     if len(poly)>1: #There's some holes
                         for h in poly[1:]:
                             if len(h)>2:
@@ -912,10 +917,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             #self.progressBar.setValue(i+1)
         # self.progressBar.setValue(0)
 
-    def epsi_point(self, point):
-        x = point[0] + EPSILON*np.random.random()
-        y = point[1] + EPSILON*np.random.random()
-        return [x, y]
 
     def formatLevel( self, level ):
         ndp=self.uPrecision.value()
@@ -937,13 +938,16 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         fields=pr.fields()
         msg = list()
         symbols=[]
+        dx,dy=self._origin
         for i, level, line in lines:
             level=float(level)
             levels=self.formatLevel(level)+self.uLabelUnits.text()
             try:
                 feat = QgsFeature(fields)
                 try:
-                    feat.setGeometry(QgsGeometry.fromWkt(MultiLineString(line).to_wkt()))
+                    geom=QgsGeometry.fromWkt(MultiLineString(line).to_wkt())
+                    geom.translate(dx,dy)
+                    feat.setGeometry(geom)
                 except:
                     pass
                 feat['index']=i
@@ -977,6 +981,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         ninvalid=0
+        dx,dy=self._origin
         for i, level_min, level_max, polygon in polygons:
             level_min=float(level_min)
             level_max=float(level_max)
@@ -997,7 +1002,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                             geom=geom2
                         if not geom.is_valid:
                             ninvalid += 1
-                    feat.setGeometry(QgsGeometry.fromWkt(geom.to_wkt()))
+                    qgeom=QgsGeometry.fromWkt(geom.to_wkt())
+                    qgeom.translate(dx,dy)
+                    feat.setGeometry(qgeom)
                 except:
                     continue
                 feat['index']=i
@@ -1032,6 +1039,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         msg = list()
         symbols=[]
         ninvalid=0
+        dx,dy=self._origin
         for i, level_min, level_max, polygon in polygons:
             level_min=float(level_min)
             level_max=float(level_max)
@@ -1042,7 +1050,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     geom=MultiPolygon(polygon)
                     if not geom.is_valid:
                         ninvalid += 1
-                    feat.setGeometry(QgsGeometry.fromWkt(geom.to_wkt()))
+                    qgeom=QgsGeometry.fromWkt(geom.to_wkt())
+                    qgeom.translate(dx,dy)
+                    feat.setGeometry(qgeom)
                 except:
                     continue
                 feat['index']=i
