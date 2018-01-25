@@ -23,12 +23,12 @@
 #  Modified by Chris Crook <ccrook@linz.govt.nz> to contour irregular data
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtXml import QDomDocument
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtXml import QDomDocument
 from qgis.core import *
 from qgis.gui import QgsMessageBar
-import resources
+from . import resources
 
 import sys
 import os.path
@@ -47,7 +47,7 @@ try:
 except:
     mplAvailable=False
 
-from frmContour import Ui_ContourDialog
+from .frmContour import Ui_ContourDialog
 
 EPSILON = 1.e-27
 LINES='lines'
@@ -114,7 +114,7 @@ class Contour:
             dlg.exec_()
         except ContourError:
             QMessageBox.warning(self._iface.mainWindow(), "Contour error",
-                unicode(sys.exc_info()[1]))
+                str(sys.exc_info()[1]))
 
 ###########################################################
 
@@ -278,12 +278,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         try:
             attr = properties.get('SourceLayerAttr')
             self.uDataField.setField(attr)
-            if layerSet.has_key(FILLED):
-                if layerSet.has_key(LINES):
+            if FILLED in layerSet:
+                if LINES in layerSet:
                     self.uBoth.setChecked(True)
                 else:
                     self.uFilledContours.setChecked(True)
-            elif layerSet.has_key(LAYERS):
+            elif LAYERS in layerSet:
                     self.uLayerContours.setChecked(True)
             else:
                 self.uLinesContours.setChecked(True)
@@ -458,7 +458,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         message = "The following layers already have contours of " + self._zField + "\n"
         message = message + "Do you want to replace them with the new contours?\n\n"
 
-        for layer in set.values():
+        for layer in list(set.values()):
             message = message + "\n   " + layer.name()
         return QMessageBox.question(self,"Replace contour layers",message,
                              QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
@@ -491,7 +491,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     self.makeFilledContours(True)
                 oldLayerSet = self.contourLayerSet( replaceContourId )
                 if oldLayerSet:
-                    for layer in oldLayerSet.values():
+                    for layer in list(oldLayerSet.values()):
                         QgsMapLayerRegistry.instance().removeMapLayer( layer.id() )
                 self._replaceLayerSet = self.contourLayerSet(self._contourId)
             finally:
@@ -530,7 +530,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     # Contour calculation code
 
     def sourceLayers(self):
-        for layer in QgsMapLayerRegistry.instance().mapLayers().values():
+        for layer in list(QgsMapLayerRegistry.instance().mapLayers().values()):
             if (layer.type() == layer.VectorLayer) and (layer.geometryType() == QGis.Point):
                 yield layer
 
@@ -584,7 +584,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'Levels' : levels,
             'LabelPrecision' : str(self.uPrecision.value()),
             'TrimZeroes' : 'yes' if self.uTrimZeroes.isChecked() else 'no',
-            'LabelUnits' : unicode(self.uLabelUnits.text()),
+            'LabelUnits' : str(self.uLabelUnits.text()),
             'MinContour' : str(self.uMinContour.value()),
             'MaxContour' : str(self.uMaxContour.value()),
             'Extend' : self.uExtend.itemText(self.uExtend.currentIndex()),
@@ -606,7 +606,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self._iface.mapCanvas().refresh()
 
     def setContourProperties( self, layer, properties ):
-        for key in properties.keys():
+        for key in list(properties.keys()):
             layer.setCustomProperty('ContourPlugin.'+key, properties[key])
 
     def getContourProperties( self, layer ):
@@ -628,18 +628,18 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'ColorRamp',
             'ReverseRamp'
             ]:
-            properties[key] = unicode(layer.customProperty('ContourPlugin.'+key))
+            properties[key] = str(layer.customProperty('ContourPlugin.'+key))
         if not properties['ContourId']:
             return None
         return properties
 
     def contourLayers(self, wanted={}):
-        for layer in QgsMapLayerRegistry.instance().mapLayers().values():
+        for layer in list(QgsMapLayerRegistry.instance().mapLayers().values()):
             properties = self.getContourProperties(layer)
             if not properties:
                 continue
             ok = True
-            for key in wanted.keys():
+            for key in list(wanted.keys()):
                 if properties.get(key) != wanted[key]:
                     ok = False
                     break
@@ -656,7 +656,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def layerSetContourId( self, layerSet ):
         if layerSet:
-            return self.getContourProperties(layerSet.values()[0]).get('ContourId')
+            return self.getContourProperties(list(layerSet.values())[0]).get('ContourId')
         return None
 
     def candidateReplacementSets( self ):
@@ -932,7 +932,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         ndp=self.uPrecision.value()
         trim=self.uTrimZeroes.isChecked()
         if trim:
-            return unicode(np.round(level,ndp))
+            return str(np.round(level,ndp))
         else:
             return "{1:.{0}f}".format(ndp,level)
 
@@ -966,7 +966,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 pr.addFeatures( [ feat ] )
                 symbols.append([level,levels])
             except:
-                msg.append(unicode(sys.exc_info()[1]))
+                msg.append(str(sys.exc_info()[1]))
                 msg.append(levels)
         if len(msg) > 0:
             self.warnUser("Levels not represented : "+", ".join(msg),"Contour issue")
@@ -1025,7 +1025,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 symbols.append([level_min,levels])
             except Exception as ex:
                 self.warnUser(ex.message)
-                msg.append(unicode(levels))
+                msg.append(str(levels))
         if len(msg) > 0:
             self.warnUser("Levels not represented : "+", ".join(msg),"Filled Contour issue")
         if ninvalid > 0:
