@@ -809,6 +809,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.dataChanged()
         return self._data
 
+    def buildTriangulation( self, x, y ):
+        from matplotlib.tri import Triangulation, TriAnalyzer
+        trig=Triangulation(x,y)
+        analyzer=TriAnalyzer(trig)
+        mask=analyzer.get_flat_tri_mask()
+        trig.set_mask(mask)
+        return trig
+
     def computeContours(self):
         extend = self.uExtend.itemText(self.uExtend.currentIndex())
         data=self.getData()
@@ -830,7 +838,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
         elif self._isMPLOk()==True: # If so, we can use the tricontour function
             try:
-                cs = plt.tricontour(x, y, z, levels, extend=extend)
+                trig=self.buildTriangulation(x,y)
+                cs = plt.tricontour(trig, z, levels, extend=extend)
             except:
                 raise ContourGenerationError()
         else:
@@ -878,9 +887,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 cs = plt.contourf(gx, gy, gz, levels, extend=extend)
             except:
                 raise ContourGenerationError()
-        elif self._isMPLOk()==True: # If so, we can use the tricontour fonction
+        elif self._isMPLOk()==True: # If so, we can use the tricontour function
             try:
-                cs = plt.tricontourf(x, y, z, levels, extend=extend)
+                trig=self.buildTriangulation(x,y)
+                cs = plt.tricontourf(trig, z, levels, extend=extend)
             except:
                 raise ContourGenerationError()
         else:
