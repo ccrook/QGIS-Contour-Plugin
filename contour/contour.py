@@ -24,6 +24,7 @@
 
 
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtXml import QDomDocument
 from qgis.core import *
@@ -96,7 +97,7 @@ class Contour:
         self.action = QAction(QIcon(":/plugins/contour/contour.png"), \
         "Contour", self._iface.mainWindow())
         self.action.setWhatsThis("Generate contours based on point vector data")
-        QObject.connect(self.action, SIGNAL("triggered()"), self.run)
+        self.action.triggered.connect(self.run)
         self._iface.addToolBarIcon(self.action)
         self._iface.vectorMenu().addAction(self.action)
 
@@ -158,6 +159,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uUseGrid.setEnabled(False)
         self.uColorRamp.populate(QgsStyleV2.defaultStyle())
         self.uDataField.setExpressionDialogTitle("Value to contour")
+        self.uDataField.setFilters(QgsFieldProxyModel.Numeric)
         self.uLevelsNumber.setMinimum(2)
         self.uLevelsNumber.setValue(10)
         self.uLinesContours.setChecked(True)
@@ -597,7 +599,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         return layer
 
     def addLayer(self, layer):
-        registry = QgsMapLayerRegistry.instance()
+        registry = QgsProject.instance()
         if not registry.mapLayer(layer.id()):
             registry.addMapLayer(layer)
         else:
