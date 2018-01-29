@@ -561,7 +561,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QgsColorRampComboBox" name="uColorRamp"/>
+           <widget class="QgsColorRampButton" name="uColorRamp"/>
           </item>
           <item>
            <widget class="QCheckBox" name="uReverseRamp">
@@ -594,7 +594,7 @@
   </customwidget>
   <customwidget>
    <class>QgsColorRampComboBox</class>
-   <extends>QComboBox</extends>
+   <extends>QToolButton</extends>
    <header>qgis.gui.h</header>
   </customwidget>
  </customwidgets>

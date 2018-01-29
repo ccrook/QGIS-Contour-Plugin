@@ -119,10 +119,10 @@ class Contour:
 
 ###########################################################
 
-class ContourError(Exception):
+class ContourError(RuntimeError):
     pass
 
-class ContourGenerationError(Exception):
+class ContourGenerationError(ContourError):
     pass
 
 ###########################################################
@@ -157,7 +157,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uSelectedOnly.setChecked(False)
         self.uSelectedOnly.setEnabled(False)
         self.uUseGrid.setEnabled(False)
-        self.uColorRamp.populate(QgsStyleV2.defaultStyle())
         self.uDataField.setExpressionDialogTitle("Value to contour")
         self.uDataField.setFilters(QgsFieldProxyModel.Numeric)
         self.uLevelsNumber.setMinimum(2)
@@ -301,7 +300,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.uApplyColors.setChecked( properties.get('ApplyColors') == 'yes' )
             ramp=self.stringToColorRamp( properties.get('ColorRamp'))
             if ramp:
-                self.uColorRamp.setSourceColorRamp(ramp)
+                self.uColorRamp.setColorRamp(ramp)
             self.uReverseRamp.setChecked( properties.get('ReverseRamp') == 'yes' )
             self.uMinContour.setValue(float(properties.get('MinContour')))
             self.uMaxContour.setValue(float(properties.get('MaxContour')))
@@ -494,15 +493,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 oldLayerSet = self.contourLayerSet( replaceContourId )
                 if oldLayerSet:
                     for layer in list(oldLayerSet.values()):
-                        QgsMapLayerRegistry.instance().removeMapLayer( layer.id() )
+                        QgsProject.instance().removeMapLayer( layer.id() )
                 self._replaceLayerSet = self.contourLayerSet(self._contourId)
             finally:
                 QApplication.restoreOverrideCursor()
 
-        except ContourError as ce:
-            self.warnUser("Error calculating grid/contours: "+ce.message)
         except ContourGenerationError as cge:
-            self.warnUser("Exception encountered: " + cge.message +" (Try thinning points)")
+            self.warnUser("Exception encountered: " + str(cge) +" (Try thinning points)")
+        except ContourError as ce:
+            self.warnUser("Error calculating grid/contours: "+str(ce))
         # self._okButton.setEnabled(False)
 
     def showHelp(self):
@@ -532,8 +531,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     # Contour calculation code
 
     def sourceLayers(self):
-        for layer in list(QgsMapLayerRegistry.instance().mapLayers().values()):
-            if (layer.type() == layer.VectorLayer) and (layer.geometryType() == QGis.Point):
+        for layer in list(QgsProject.instance().mapLayers().values()):
+            if (layer.type() == layer.VectorLayer) and (layer.geometryType() == QgsWkbTypes.PointGeometry):
                 yield layer
 
     def getLevels(self):
@@ -592,7 +591,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'Extend' : self.uExtend.itemText(self.uExtend.currentIndex()),
             'Method' : self.uMethod.itemText(self.uMethod.currentIndex()),
             'ApplyColors' : 'yes' if self.uApplyColors.isChecked() else 'no',
-            'ColorRamp' : self.colorRampToString( self.uColorRamp.currentColorRamp()),
+            'ColorRamp' : self.colorRampToString( self.uColorRamp.colorRamp()),
             'ReverseRamp' : 'yes' if self.uReverseRamp.isChecked() else 'no',
             }
         self.setContourProperties(layer, properties)
@@ -636,7 +635,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         return properties
 
     def contourLayers(self, wanted={}):
-        for layer in list(QgsMapLayerRegistry.instance().mapLayers().values()):
+        for layer in list(QgsProject.instance().mapLayers().values()):
             properties = self.getContourProperties(layer)
             if not properties:
                 continue
@@ -683,6 +682,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def makeContours(self):
         lines = self.computeContours()
+        lines=None
         if lines is None:
             return
         clayer =  self.buildContourLayer(lines)
@@ -760,21 +760,24 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 expression=QgsExpression(zField)
                 if expression.hasParserError():
-                    if layer.fieldNameIndex(zField) >= 0:
+                    if layer.fields().indexFromName(zField) >= 0:
                         zField='"'+zField.replace('"','""')+'"'
                         expression=QgsExpression(zField)
                 if expression.hasParserError():
                     raise ContourError("Cannot parse "+zField)
-                fields=layer.pendingFields()
-                if not expression.prepare(fields):
-                    raise ContourError("Cannot evaluate value "+zField)
+                context=QgsExpressionContext()
+                fields=layer.fields()
+                context.setFields(fields)
+                #if not expression.prepare(context):
+                #    raise ContourError("Cannot evaluate value "+zField)
                 request = QgsFeatureRequest()
                 request.setSubsetOfAttributes( expression.referencedColumns(),fields)
                 for feat in layer.getFeatures( request ):
                     try:
                         if fids is not None and feat.id() not in fids:
                             continue
-                        zval=expression.evaluate(feat)
+                        context.setFeature(feat)
+                        zval=expression.evaluate(context)
                         if zval is not None:
                             geom = feat.geometry().asPoint()
                             x.append(geom.x())
@@ -806,7 +809,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 self._thinRadius=radius
                 self.checkGridded()
         except ContourError as ce:
-            self.warnUser(ce.message)
+            self.warnUser(str(ce))
         finally:
             self.dataChanged()
         return self._data
@@ -840,21 +843,31 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
         elif self._isMPLOk()==True: # If so, we can use the tricontour function
             try:
-                trig=self.buildTriangulation(x,y)
-                cs = plt.tricontour(trig, z, levels, extend=extend)
+                #trig=self.buildTriangulation(x,y)
+                #cs = plt.tricontour(trig, z, levels, extend=extend)
+                #np.save('/home/chris/temp/data.x',x)
+                #np.save('/home/chris/temp/data.y',y)
+                #np.save('/home/chris/temp/data.z',z)
+                #np.save('/home/chris/temp/data.l',levels)
+                #print(type(x))
+                #print(x)
+                #print(y)
+                #raise ContourGenerationError('xxxxx')
+                cs = plt.tricontour(x, y, z, levels, extend=extend)
             except:
                 raise ContourGenerationError()
         else:
             raise ContourGenerationError()
         lines = list()
         levels = [float(l) for l in cs.levels]
+        # self.progressBar.setRange(0, len(cs.collections))
         for i, line in enumerate(cs.collections):
             linestrings = []
             for path in line.get_paths():
                 if len(path.vertices) > 1:
                     linestrings.append(path.vertices)
             lines.append([ i, levels[i], linestrings])
-            self.progressBar.setValue(i+1)
+            #self.progressBar.setValue(i+1)
         return lines
 
     def computeFilledContours(self,asLayers=False):
@@ -1026,7 +1039,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 pr.addFeatures( [ feat ] )
                 symbols.append([level_min,levels])
             except Exception as ex:
-                self.warnUser(ex.message)
+                self.warnUser(ex.args[0])
                 msg.append(str(levels))
         if len(msg) > 0:
             self.warnUser("Levels not represented : "+", ".join(msg),"Filled Contour issue")
@@ -1088,7 +1101,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def applyRenderer( self, layer, type, zfield, zlevels ):
         if not self.uApplyColors.isChecked():
             return
-        ramp=self.uColorRamp.currentColorRamp()
+        ramp=self.uColorRamp.colorRamp()
         reversed=self.uReverseRamp.isChecked()
         if ramp is None:
             return
@@ -1145,7 +1158,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         settings.setValue(base+'trimZeroes','yes' if self.uTrimZeroes.isChecked() else 'no')
         settings.setValue(base+'units',self.uLabelUnits.text())
         settings.setValue(base+'applyColors','yes' if self.uApplyColors.isChecked() else 'no')
-        settings.setValue(base+'ramp',self.colorRampToString(self.uColorRamp.currentColorRamp()))
+        settings.setValue(base+'ramp',self.colorRampToString(self.uColorRamp.colorRamp()))
         settings.setValue(base+'reverseRamp','yes' if self.uReverseRamp.isChecked() else 'no')
 
     def loadSettings( self ):
@@ -1193,7 +1206,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             ramp=settings.value(base+'ramp')
             ramp=self.stringToColorRamp(ramp)
             if ramp:
-                self.uColorRamp.setSourceColorRamp(ramp)
+                self.uColorRamp.setColorRamp(ramp)
 
             reverseRamp=settings.value(base+'reverseRamp')
             self.uReverseRamp.setChecked(reverseRamp=='yes')
