@@ -562,7 +562,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             url=type+'?crs=internal:'+str(self._crs.srsid())
             layer = QgsVectorLayer(url, name, "memory")
 
-        if not layer:
+        if layer is None:
             raise ContourError("Could not create layer for contours")
 
         attributes = [
@@ -682,7 +682,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def makeContours(self):
         lines = self.computeContours()
-        lines=None
         if lines is None:
             return
         clayer =  self.buildContourLayer(lines)
@@ -1108,7 +1107,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         nLevels=len(zlevels)
         if nLevels < 2:
             return
-        renderer=QgsCategorizedSymbolRendererV2('index')
+        renderer=QgsCategorizedSymbolRenderer('index')
         for i, level in enumerate(zlevels):
             value,label=level
             rampvalue=float(i)/(nLevels-1)
@@ -1117,19 +1116,19 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             color=ramp.color(rampvalue)
             symbol=None
             if type=='line':
-                symbol=QgsLineSymbolV2.createSimple({})
+                symbol=QgsLineSymbol.createSimple({})
             else:
-                symbol=QgsFillSymbolV2.createSimple({'outline_style':'no'})
+                symbol=QgsFillSymbol.createSimple({'outline_style':'no'})
             symbol.setColor(color)
-            category=QgsRendererCategoryV2(i,symbol,label)
+            category=QgsRendererCategory(i,symbol,label)
             renderer.addCategory(category)
-        layer.setRendererV2(renderer)
+        layer.setRenderer(renderer)
 
     def colorRampToString( self, ramp ):
         if ramp is None:
             return '';
         d=QDomDocument()
-        d.appendChild(QgsSymbolLayerV2Utils.saveColorRamp('ramp',ramp,d))
+        d.appendChild(QgsSymbolLayerUtils.saveColorRamp('ramp',ramp,d))
         rampdef=d.toString()
         return rampdef
 
@@ -1139,7 +1138,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 return None
             d=QDomDocument()
             d.setContent(rampdef)
-            return QgsSymbolLayerV2Utils.loadColorRamp( d.documentElement() )
+            return QgsSymbolLayerUtils.loadColorRamp( d.documentElement() )
         except:
             return None
 
