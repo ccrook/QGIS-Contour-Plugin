@@ -508,7 +508,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         file = inspect.getsourcefile(ContourDialog)
         file = 'file://' + os.path.join(os.path.dirname(file),'index.html')
         file = file.replace("\\","/")
-        self._iface.openURL(file,False)
+        QDesktopServices.openUrl(QUrl(file))
 
     def validate(self):
         message = None
