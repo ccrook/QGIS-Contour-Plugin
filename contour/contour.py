@@ -605,7 +605,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             node=QgsProject.instance().layerTreeRoot().findLayer(layer.id())
             if node is not None:
                 node.setItemVisibilityChecked(True)
-            # layer.setCacheImage(None)
+            layer.triggerRepaint()
             self._iface.mapCanvas().refresh()
 
     def setContourProperties( self, layer, properties ):
