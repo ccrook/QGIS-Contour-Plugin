@@ -44,7 +44,6 @@ try:
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     from matplotlib.mlab import griddata
-    from shapely.geometry import MultiLineString, MultiPolygon
 except:
     mplAvailable=False
 
@@ -232,7 +231,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         ld = l-1
         ends = np.flatnonzero(xd[0:ld-1]*xd[1:ld]+yd[0:ld-1]*yd[1:ld]<0)+2
         nr = ends[0]
-        nc = (len(ends)/2)+1
+        nc = int(len(ends)/2)+1
         ok = False
         if (nr >= 2) and (nc >= 2) and (nr*nc == l) and (all(ends%nr <= 1)):
            ok = True
@@ -603,8 +602,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if not registry.mapLayer(layer.id()):
             registry.addMapLayer(layer)
         else:
-            self._iface.legendInterface().setLayerVisible(layer, True)
-            layer.setCacheImage(None)
+            node=QgsProject.instance().layerTreeRoot().findLayer(layer.id())
+            if node is not None:
+                node.setItemVisibilityChecked(True)
+            # layer.setCacheImage(None)
             self._iface.mapCanvas().refresh()
 
     def setContourProperties( self, layer, properties ):
@@ -845,6 +846,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 #trig=self.buildTriangulation(x,y)
                 #cs = plt.tricontour(trig, z, levels, extend=extend)
+                raise ContourGenerationError('xxxxx')
                 np.save('/home/chris/temp/data.x',x)
                 np.save('/home/chris/temp/data.y',y)
                 np.save('/home/chris/temp/data.z',z)
@@ -893,6 +895,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         x, y, z = data
         usegrid=self._dataGridShape is not None and self.uUseGrid.isChecked()
         if usegrid:
+            print("x.shape",x.shape)
+            print("gridshape",self._dataGridShape)
             gx = x.reshape(self._dataGridShape)
             gy = y.reshape(self._dataGridShape)
             gz = z.reshape(self._dataGridShape)
@@ -949,6 +953,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         else:
             return "{1:.{0}f}".format(ndp,level)
 
+    def geometryFromMultiLineString(self,lines):
+        glines=[]
+        for l in lines:
+            points=[QgsPointXY(x,y) for x,y in l]
+            glines.append(points)
+        geom=QgsGeometry.fromMultiPolylineXY(glines)
+        geom.makeValid()
+        return geom
+
     def buildContourLayer(self, lines):
         name = self.uOutputName.text()
         zfield=self._zField
@@ -968,10 +981,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 feat = QgsFeature(fields)
                 try:
-                    geom=QgsGeometry.fromWkt(MultiLineString(line).to_wkt())
+                    geom=self.geometryFromMultiLineString(line)
                     geom.translate(dx,dy)
                     feat.setGeometry(geom)
-                except:
+                except Exception as ex:
+                    print("Exception",ex)
                     pass
                 feat['index']=i
                 feat[zfield]=level
@@ -987,6 +1001,21 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         vl.commitChanges()
         self.applyRenderer(vl,'line',zfield,symbols)
         return vl
+
+    def geometryFromMultiPolygon(self,polygons):
+        gpolys=[]
+        for p in polygons:
+            gpoly=[]
+            interior,exterior=p
+            ipoly=[QgsPointXY(x,y) for x,y in interior]
+            gpoly.append(ipoly)
+            for e in exterior:
+                epoly=[QgsPointXY(x,y) for x,y in e]
+                gpoly.append(epoly)
+            gpolys.append(gpoly)
+        geom=QgsGeometry.fromMultiPolygonXY(gpolys)
+        geom.makeValid()
+        return geom
 
     def buildFilledContourLayer(self, polygons, asLayers=False):
         name = self.uOutputName.text()
@@ -1015,20 +1044,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 feat = QgsFeature(fields)
                 try:
-                    geom=MultiPolygon(polygon)
-                    if not geom.is_valid:
-                        # Try buffering to create a valid alternative for geometry
-                        # Test area is not significantly altered
-
-                        geom2=geom.buffer(0.0)
-                        if geom2.area > 0.0 and abs(1-geom.area/geom2.area) < 0.000001:
-                            geom=geom2
-                        if not geom.is_valid:
-                            ninvalid += 1
-                    qgeom=QgsGeometry.fromWkt(geom.to_wkt())
-                    qgeom.translate(dx,dy)
-                    feat.setGeometry(qgeom)
-                except:
+                    geom=self.geometryFromMultiPolygon(polygon)
+                    geom.translate(dx,dy)
+                    feat.setGeometry(geom)
+                except Exception as ex:
+                    ninvalid += 1
+                    print("Exception:",ex)
                     continue
                 feat['index']=i
                 feat[zmin]=level_min
@@ -1070,13 +1091,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 feat = QgsFeature(fields)
                 try:
-                    geom=MultiPolygon(polygon)
-                    if not geom.is_valid:
-                        ninvalid += 1
-                    qgeom=QgsGeometry.fromWkt(geom.to_wkt())
-                    qgeom.translate(dx,dy)
-                    feat.setGeometry(qgeom)
+                    geom=self.geometryFromMultiPolygon(polygon)
+                    geom.translate(dx,dy)
+                    feat.setGeometry(geom)
                 except:
+                    ninvalid += 1
+                    print("Exception:",ex)
                     continue
                 feat['index']=i
                 feat[zfield]=level_min
