@@ -150,8 +150,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         # Not sure that there is a valid use case?
         self.uLayerContours.hide()
 
-        self._okButton = self.uButtonBox.button(QDialogButtonBox.Ok)
-        self._okButton.setEnabled(False)
+        self.uAddButton.setEnabled(False)
         re = QRegExp("\\d+\\.?\\d*(?:[Ee][+-]?\\d+)?")
         self.uLevelsList.setSortingEnabled(False)
         self.uSelectedOnly.setChecked(False)
@@ -188,7 +187,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uPrecision.valueChanged[int].connect(self.updatePrecision)
         self.uTrimZeroes.toggled[bool].connect(self.updatePrecision)
         self.uLevelsList.itemDoubleClicked[QListWidgetItem].connect(self.editLevel)
-        self.uButtonBox.helpRequested.connect(self.showHelp)
+        self.uHelpButton.clicked.connect(self.showHelp)
+        self.uAddButton.clicked.connect(self.addContours)
+        self.uCloseButton.clicked.connect(self.closeDialog)
         self.uMethod.currentIndexChanged[int].connect(self.computeLevels)
         self.uLinesContours.toggled[bool].connect(self.modeToggled)
         self.uFilledContours.toggled[bool].connect(self.modeToggled)
@@ -212,9 +213,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def adviseUser(self,message):
         self._iface.messageBar().pushMessage(message, QgsMessageBar.INFO,5)
 
-    def closeEvent(self,event):
+    def closeDialog(self):
         self.saveSettings()
-        QDialog.closeEvent(self,event)
+        self.close()
 
     def checkGridded(self):
         """
@@ -448,10 +449,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.enableOkButton()
 
     def enableOkButton(self):
-        self._okButton.setEnabled(False)
+        self.uAddButton.setEnabled(False)
         try:
             self.validate()
-            self._okButton.setEnabled(True)
+            self.uAddButton.setEnabled(True)
         except:
             pass
 
@@ -464,7 +465,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         return QMessageBox.question(self,"Replace contour layers",message,
                              QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
 
-    def accept(self):
+    def addContours(self):
         try:
             self.validate()
             self.validateConditions()
@@ -502,7 +503,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.warnUser("Exception encountered: " + str(cge) +" (Try thinning points)")
         except ContourError as ce:
             self.warnUser("Error calculating grid/contours: "+str(ce))
-        # self._okButton.setEnabled(False)
+        # self.uAddButton.setEnabled(False)
 
     def showHelp(self):
         file = inspect.getsourcefile(ContourDialog)
@@ -844,14 +845,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 #trig=self.buildTriangulation(x,y)
                 #cs = plt.tricontour(trig, z, levels, extend=extend)
-                #np.save('/home/chris/temp/data.x',x)
-                #np.save('/home/chris/temp/data.y',y)
-                #np.save('/home/chris/temp/data.z',z)
-                #np.save('/home/chris/temp/data.l',levels)
-                #print(type(x))
-                #print(x)
-                #print(y)
-                #raise ContourGenerationError('xxxxx')
+                np.save('/home/chris/temp/data.x',x)
+                np.save('/home/chris/temp/data.y',y)
+                np.save('/home/chris/temp/data.z',z)
+                np.save('/home/chris/temp/data.l',levels)
+                print('extend',extend)
+                raise ContourGenerationError('xxxxx')
                 cs = plt.tricontour(x, y, z, levels, extend=extend)
             except:
                 raise ContourGenerationError()

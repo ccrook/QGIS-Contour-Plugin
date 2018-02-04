@@ -20,7 +20,21 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,1,0,0">
-   <item row="0" column="0" colspan="2">
+   <item row="3" column="2">
+    <widget class="QPushButton" name="uAddButton">
+     <property name="text">
+      <string>&amp;Add</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="uHelpButton">
+     <property name="text">
+      <string>Help</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="5">
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Input</string>
@@ -65,8 +79,7 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QgsFieldExpressionWidget" name="uDataField">
-         </widget>
+         <widget class="QgsFieldExpressionWidget" name="uDataField"/>
         </item>
         <item row="2" column="1">
          <widget class="QCheckBox" name="uSelectedOnly">
@@ -181,7 +194,7 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item row="1" column="0" colspan="5">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Contouring</string>
@@ -432,17 +445,7 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QDialogButtonBox" name="uButtonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="2">
+   <item row="2" column="0" colspan="5">
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
       <string>Output</string>
@@ -561,7 +564,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QgsColorRampButton" name="uColorRamp"/>
+           <widget class="QgsColorRampButton" name="uColorRamp" native="true"/>
           </item>
           <item>
            <widget class="QCheckBox" name="uReverseRamp">
@@ -584,6 +587,13 @@
      </layout>
     </widget>
    </item>
+   <item row="3" column="3">
+    <widget class="QPushButton" name="uCloseButton">
+     <property name="text">
+      <string>&amp;Close</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -593,9 +603,9 @@
    <header>qgsfieldexpressionwidget.h</header>
   </customwidget>
   <customwidget>
-   <class>QgsColorRampComboBox</class>
-   <extends>QToolButton</extends>
-   <header>qgis.gui.h</header>
+   <class>QgsColorRampButton</class>
+   <extends>QWidget</extends>
+   <header>qgscolorrampbutton.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -621,41 +631,7 @@
   <tabstop>uApplyColors</tabstop>
   <tabstop>uColorRamp</tabstop>
   <tabstop>uReverseRamp</tabstop>
-  <tabstop>uButtonBox</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>uButtonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>ContourDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>372</x>
-     <y>493</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>215</x>
-     <y>290</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>uButtonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>ContourDialog</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>372</x>
-     <y>493</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>132</x>
-     <y>239</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
