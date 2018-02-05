@@ -44,5 +44,5 @@
 '''
 
 def classFactory(iface):
-    from contour import Contour
+    from .contour import Contour
     return Contour(iface)

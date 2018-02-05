@@ -8,11 +8,11 @@ about=Generate contour lines (isolines) and/or filled contours
   MemoryLayerSaver plugin is installed these are saved with the
   QGIS project.  Otherwise they can be saved to another persistant 
   format.
-  Requires python modules numpy, matplotlib, and shapely.
+  Requires python modules numpy, matplotlib.
 category=Vector
 version=1.4.4
-experimental=False
-qgisMinimumVersion=2.4
+experimental=True
+qgisMinimumVersion=3.0
 author=Chris Crook, Lionel Roubeyrie
 email=ccrook@linz.govt.nz
 icon=./contour.png
