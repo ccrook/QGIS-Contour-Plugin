@@ -90,7 +90,7 @@ class Contour:
         if not mplAvailable:
             QMessageBox.warning(self._iface.mainWindow(), "Contour error",
                 "The contour plugin is disabled as it requires python modules"
-                " numpy, matplotlib, and shapely which are not all installed")
+                " numpy and matplotlib which are not both installed")
             return
 
         self.action = QAction(QIcon(":/plugins/contour/contour.png"), \
@@ -846,13 +846,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             try:
                 #trig=self.buildTriangulation(x,y)
                 #cs = plt.tricontour(trig, z, levels, extend=extend)
-                raise ContourGenerationError('xxxxx')
-                np.save('/home/chris/temp/data.x',x)
-                np.save('/home/chris/temp/data.y',y)
-                np.save('/home/chris/temp/data.z',z)
-                np.save('/home/chris/temp/data.l',levels)
-                print('extend',extend)
-                raise ContourGenerationError('xxxxx')
                 cs = plt.tricontour(x, y, z, levels, extend=extend)
             except:
                 raise ContourGenerationError()
@@ -895,8 +888,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         x, y, z = data
         usegrid=self._dataGridShape is not None and self.uUseGrid.isChecked()
         if usegrid:
-            print("x.shape",x.shape)
-            print("gridshape",self._dataGridShape)
             gx = x.reshape(self._dataGridShape)
             gy = y.reshape(self._dataGridShape)
             gz = z.reshape(self._dataGridShape)
@@ -985,7 +976,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     geom.translate(dx,dy)
                     feat.setGeometry(geom)
                 except Exception as ex:
-                    print("Exception",ex)
                     pass
                 feat['index']=i
                 feat[zfield]=level
@@ -1049,7 +1039,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     feat.setGeometry(geom)
                 except Exception as ex:
                     ninvalid += 1
-                    print("Exception:",ex)
                     continue
                 feat['index']=i
                 feat[zmin]=level_min
@@ -1096,7 +1085,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     feat.setGeometry(geom)
                 except:
                     ninvalid += 1
-                    print("Exception:",ex)
                     continue
                 feat['index']=i
                 feat[zfield]=level_min
