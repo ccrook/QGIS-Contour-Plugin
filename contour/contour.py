@@ -118,10 +118,10 @@ class Contour:
 
 ###########################################################
 
-class ContourError(Exception):
+class ContourError(RuntimeError):
     pass
 
-class ContourGenerationError(Exception):
+class ContourGenerationError(RuntimeError):
     pass
 
 ###########################################################
@@ -134,7 +134,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self._origin = None
         self._loadedDataDef = None
         self._layer=None
-        self._zField = ""
         self._dataGridShape = None
         self._gridSaved = False
         self._gridDisplayed = False
@@ -536,7 +535,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def getLevels(self):
         list = self.uLevelsList
-        return [float(list.item(i).text()) for i in range(0, list.count())]
+        levels=[float(list.item(i).text()) for i in range(0, list.count())]
+        for l0,l1 in zip(levels[:-1],levels[1:]):
+            if l1 <= l0:
+                raise ContourError("Contour levels must be increasing in values")
+        return levels
 
     def clearLayer(self, layer):
         pl = layer.dataProvider()
@@ -881,8 +884,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         elif self._isMPLOk()==True: # If so, we can use the tricontour fonction
             try:
                 cs = plt.tricontourf(x, y, z, levels, extend=extend)
-            except:
-                raise ContourGenerationError()
+            except ValueError as ve:
+                raise ContourGenerationError( ve.message)
         else:
             raise ContourGenerationError()
         levels = [float(l) for l in cs.levels]
