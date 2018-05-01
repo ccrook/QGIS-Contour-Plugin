@@ -44,7 +44,7 @@ try:
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     from matplotlib.mlab import griddata
-except:
+except ImportError:
     mplAvailable=False
 
 from .frmContour import Ui_ContourDialog
