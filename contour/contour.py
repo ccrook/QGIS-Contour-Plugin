@@ -44,7 +44,7 @@ try:
     import matplotlib.pyplot as plt
     from matplotlib.mlab import griddata
     from shapely.geometry import MultiLineString, MultiPolygon
-except:
+except ImportError:
     mplAvailable=False
 
 from frmContour import Ui_ContourDialog
