@@ -2,6 +2,7 @@
 import platform
 import re
 import sys
+import traceback
 from .DataGridder import DataGridder
 from . import ContourUtils
 from . import ContourMethod
@@ -21,7 +22,8 @@ from qgis.core import (
     )
 from PyQt5.QtCore import (
     QObject,
-    QVariant
+    QVariant,
+    QCoreApplication
     )
 
 _mplAvailable=False
@@ -35,16 +37,85 @@ except ImportError:
     _mplAvailable=False
     pass
 
+def tr(string):
+    return QCoreApplication.translate('Processing', string)
+
 class ContourError( RuntimeError ):
-    pass
+
+    def message():
+        return self.args[0] if len(args)  > 1 else "Exception"
 
 class ContourGenerationError( ContourError ):
     pass
 
+class ContourExtendOption:
+
+    both='both'
+    below='min'
+    above='max'
+    neither='neither'
+
+    _options=[both,below,above,neither]
+    _above=[both,above]
+    _below=[both,below]
+
+    _description={
+        both: tr('Fill below minimum and above maximum contour'),
+        below: tr('Fill below minimum contour'),
+        above: tr('Fill above maximum contour'),
+        neither: tr('Don''t fill below or above maximum contour')
+        }
+
+    def options():
+        return ContourExtendOption._options
+
+    def valid( option ):
+        return option in ContourExtendOption._options
+
+    def description( option ):
+        return ContourExtendOption._description.get(option,tr('Invalid contour option {0}').format(option))
+
+    def extendBelow( option ):
+        return option in ContourExtendOption._below
+
+    def extendAbove( option ):
+        return option in ContourExtendOption._above
+
+class ContourType:
+    line='line'
+    filled='filled'
+    layer='layer'
+
+    _types=[line, filled, layer]
+
+    _description={
+        line: tr('Contour lines'),
+        filled: tr('Filled contour polygons'),
+        layer: tr('Layer contour polygons')
+        }
+
+    _wkbtype={
+        line: QgsWkbTypes.MultiLineString,
+        filled: QgsWkbTypes.MultiPolygon,
+        layer: QgsWkbTypes.MultiPolygon,
+        }
+
+    def types():
+        return ContourType._types
+
+    def valid( type ):
+        return type in ContourType._types
+
+    def description( type ):
+        return ContourType._description.get(type,tr('Invalid contour type {0}').format(type))
+
+    def wkbtype( type ):
+        return ContourType._wkbtype.get(type)
+
 class _DummyFeedback:
 
     def isCanceled( self ):
-        pass
+        return False
 
     def setProgress( self, percent ):
         pass
@@ -73,7 +144,7 @@ class ContourGenerator( QObject ):
         '''
         QObject.__init__(self)
         if not _mplAvailable:
-            raise ContourError(self.tr("python matplotlib not available"))
+            raise ContourError(tr("python matplotlib not available"))
         self._x = None
         self._y = None
         self._z = None
@@ -90,16 +161,13 @@ class ContourGenerator( QObject ):
         self._contourMethod = None
         self._contourMethodParams = None
         self._levels = None
-        self._filledContours = False
-        self._extendFilled = 'both'
+        self._contourType = ContourType.line
+        self._extendFilled = ContourExtendOption.both
         self._labelNdp = -1
         self._labelTrimZeros = False
         self._labelUnits = ''
         self._feedback = feedback or _DummyFeedback()
         self.setDataSource( source, zField )
-
-    def tr(self, string):
-        return QCoreApplication.translate('Processing', string)
 
     def _dataDef( self ):
         return (
@@ -110,9 +178,6 @@ class ContourGenerator( QObject ):
 
     # Functions to support null feedback
     def isCanceled( self ):
-        return None
-
-    def setProgress( self ):
         return None
 
     def setDataSource( self, source, zField=None, sourceFids=None ):
@@ -137,7 +202,7 @@ class ContourGenerator( QObject ):
     def setUseGrid( self, usegrid ):
         self._useGrid=usegrid
 
-    def setContourMethod( self, levels ):
+    def setContourLevels( self, levels ):
         self.setContourMethod('manual',{'levels':levels})
 
     def setContourMethod( self, method, params ):
@@ -147,15 +212,15 @@ class ContourGenerator( QObject ):
 
     def setContourType( self, contourType ):
         contourType=contourType.lower()
-        if contourType=='line':
-            self._filledContours=False
-        elif contourType=='filled':
-            self._filledContours=True
-        else:
-            raise ContourError(self.tr("Invalid contour type {0}").format(contourType))
+        if not ContourType.valid(contourType):
+            raise ContourError(tr("Invalid contour type {0}").format(contourType))
+        self._contourType=contourType
 
-    def setExtendFilled( self, extend ):
-        self._extendFilled=self.translateExtend(extend)
+    def setContourExtendOption( self, extend ):
+        extend=extend.lower()
+        if not ContourExtendOption.valid(extend):
+            raise ContourError(tr("Invalid filled contour extend option {0}").format(extend))
+        self._extendFilled=extend
 
     def setLabelFormat( self, ndp, trim=False, units='' ):
         self._labelNdp = ndp
@@ -203,12 +268,12 @@ class ContourGenerator( QObject ):
                     self._zFieldName="Expression"
             expression=QgsExpression(zField)
             if expression.hasParserError():
-                raise ContourError(self.tr("Cannot parse")+" "+zField)
+                raise ContourError(tr("Cannot parse")+" "+zField)
             fields=source.fields()
             context=QgsExpressionContext()
             context.setFields(fields)
             if not expression.prepare(context):
-                raise ContourError(self.tr("Cannot evaluate value")+ " "+zField)
+                raise ContourError(tr("Cannot evaluate value")+ " "+zField)
             request = QgsFeatureRequest()
             request.setSubsetOfAttributes( expression.referencedColumns(),fields)
             if self._sourceFids is not None:
@@ -223,7 +288,7 @@ class ContourGenerator( QObject ):
                     try:
                         zval=float(zval)
                     except ValueError:
-                        raise ContourError(self.tr("Z value {0} is not number")
+                        raise ContourError(tr("Z value {0} is not number")
                                                    .format(zval))
                     if zval is not None:
                         geom = feat.geometry().asPoint()
@@ -240,7 +305,6 @@ class ContourGenerator( QObject ):
                 x=np.array(x)
                 y=np.array(y)
                 z=np.array(z)
-                feedback.pushInfo("Discard tolerance {0}".format(discardTolerance))
                 if discardTolerance > 0:
                     index=ContourUtils.discardDuplicatePoints(
                         x,y,discardTolerance,self.crs().isGeographic())
@@ -249,10 +313,10 @@ class ContourGenerator( QObject ):
                         x=x[index]
                         y=y[index]
                         z=z[index]
-                        feedback.pushInfo("{0} near duplicate points discarded {0}"
-                                          .format(npt-npt1))
+                        feedback.pushInfo(tr("{0} near duplicate points discarded - tolerance {1}")
+                                          .format(npt-npt1,discardTolerance))
         except ContourError as ce:
-            feedback.reportError(ce.message)
+            feedback.reportError(ce.message())
             feedback.setProgress(0)
             return self._x,self._y,self._z
         finally:
@@ -284,22 +348,23 @@ class ContourGenerator( QObject ):
     def levels( self ):
         if self._levels is None:
             x,y,z = self.data()
-            method=self._contourMethod
-            params=self._contourMethodParams
-            if method is None:
-                raise ContourError(self.tr("Contouring method not defined"))
-            self._levels=ContourMethod.calculateLevels(z,method,**params)
+            if z is not None:
+                method=self._contourMethod
+                params=self._contourMethodParams
+                if method is None:
+                    raise ContourError(tr("Contouring method not defined"))
+                self._levels=ContourMethod.calculateLevels(z,method,**params)
         return self._levels
 
     def crs( self ):
         return self._source.sourceCrs()
 
     def wkbtype( self ):
-        return QgsWkbTypes.MultiPolygon if self._filledContours else QgsWkbTypes.MultiLineString
+        return ContourType.wkbtype(self._contourType)
 
     def fields( self ):
         zFieldName=self._zFieldName
-        if self._filledContours:
+        if self._contourType == ContourType.filled:
             fielddef= [('index',int),
                        (zFieldName+"_min",float),
                        (zFieldName+"_max",float),
@@ -319,35 +384,25 @@ class ContourGenerator( QObject ):
                 )
         return fields
 
-    def geometryFromMultiLineString(self,lines):
-        glines=[]
-        for l in lines:
-            points=[QgsPointXY(x,y) for x,y in l]
-            glines.append(points)
-        geom=QgsGeometry.fromMultiPolylineXY(glines)
-        geom.makeValid()
-        return geom
-
-    def geometryFromMultiPolygon(self,polygons):
-        gpolys=[]
-        for p in polygons:
-            gpoly=[]
-            interior,exterior=p
-            ipoly=[QgsPointXY(x,y) for x,y in interior]
-            gpoly.append(ipoly)
-            for e in exterior:
-                epoly=[QgsPointXY(x,y) for x,y in e]
-                gpoly.append(epoly)
-            gpolys.append(gpoly)
-        geom=QgsGeometry.fromMultiPolygonXY(gpolys)
-        geom.makeValid()
-        return geom
-
     def contourFeatures(self):
-        if self._filledContours:
-            return self.filledContourFeatures()
-        else:
+        if self._contourType == ContourType.line:
             return self.lineContourFeatures()
+        elif self._contourType == ContourType.filled:
+            return self.filledContourFeatures()
+        elif self._contourType == ContourType.layer:
+            return self.layerContourFeatures()
+        else:
+            return []
+
+    def gridContourData(self):
+        x,y,z=self.data()
+        shape=self._gridShape
+        gx=x.reshape(shape)
+        gy=y.reshape(shape)
+        gz=z.reshape(shape)
+        self._feedback.pushInfo("Contouring {0} by {1} grid"
+            .format(shape[0],shape[1]))
+        return gx, gy, gz
 
     def _buildtrig_workaround( self, x, y ):
         '''
@@ -387,101 +442,14 @@ class ContourGenerator( QObject ):
         trig.set_mask(mask)
         return trig
 
-    def computeContours(self):
+    def trigContourData(self):
         x,y,z=self.data()
-        levels = self.levels()
-        extend=self._extendFilled
-        usegrid=self.isGridded() and self._useGrid
-        if usegrid:
-            shape=self._gridShape
-            gx = x.reshape(shape)
-            gy = y.reshape(shape)
-            gz = z.reshape(shape)
-            self._feedback.pushInfo("Contouring {0} by {1} grid"
-                .format(shape[0],shape[1]))
-            try:
-                cs = contour(gx, gy, gz, levels, extend=extend)
-            except:
-                raise
-                raise ContourGenerationError()
-
-        else:
-            try:
-                self._feedback.pushInfo("Triangulating {0} points"
-                    .format(len(x)))
-                trig=self.buildTriangulation(x,y)
-                self._feedback.pushInfo("Contouring {0} triangles"
-                    .format(trig.triangles.shape[0]))
-                cs = tricontour(trig, z, levels, extend=extend)
-            except:
-                raise
-                raise ContourGenerationError()
-        lines = list()
-        levels = [float(l) for l in cs.levels]
-        for i, line in enumerate(cs.collections):
-            linestrings = []
-            for path in line.get_paths():
-                if len(path.vertices) > 1:
-                    linestrings.append(path.vertices)
-            lines.append([ i, levels[i], linestrings])
-        return lines
-
-    def computeFilledContours(self):
-        levels = self.levels()
-        x, y, z = self.data()
-        extend=self._extendFilled
-        usegrid=self.isGridded() and self._useGrid
-        if usegrid:
-            shape=self._gridShape
-            gx = x.reshape(shape)
-            gy = y.reshape(shape)
-            gz = z.reshape(shape)
-            self._feedback.pushInfo("Contouring {0} by {1} grid"
-                .format(shape[0],shape[1]))
-            try:
-                cs = contourf(gx, gy, gz, levels, extend=extend)
-            except:
-                raise ContourGenerationError()
-        else:
-            try:
-                self._feedback.pushInfo("Triangulating {0} points"
-                    .format(len(x)))
-                trig=self.buildTriangulation(x,y)
-                self._feedback.pushInfo("Contouring {0} triangles"
-                    .format(trig.triangles.shape[0]))
-                cs = tricontourf(trig, z, levels, extend=extend)
-            except:
-                raise ContourGenerationError()
-
-        # NOTE: Need to handle extend
-        levels = [float(l) for l in cs.levels]
-        if extend:
-            levels = np.append([-np.inf,], levels)
-            levels = np.append(levels, [np.inf,])
-
-        polygons=[]
-        for i, polygon in enumerate(cs.collections):
-            mpoly = []
-            for path in polygon.get_paths():
-                path.should_simplify = False
-                poly = path.to_polygons()
-                exterior = []
-                holes = []
-                if len(poly)>0:
-                    exterior = poly[0] #and interiors (holes) are in poly[1:]
-                    #Crazy correction of one vertice polygon, mpl doesn't care about it
-                    if len(exterior) < 2:
-                        continue
-                    p0 = exterior[0]
-                    if len(poly)>1: #There's some holes
-                        for h in poly[1:]:
-                            if len(h)>2:
-                                holes.append(h)
-
-                mpoly.append([exterior, holes])
-            if len(mpoly) > 0:
-                polygons.append([i, levels[i], levels[i+1], mpoly])
-
+        self._feedback.pushInfo("Triangulating {0} points"
+            .format(len(x)))
+        trig=self.buildTriangulation(x,y)
+        self._feedback.pushInfo("Contouring {0} triangles"
+            .format(trig.triangles.shape[0]))
+        return trig,z
         return polygons
 
     def calcLabelNdp( self ):
@@ -500,28 +468,48 @@ class ContourGenerator( QObject ):
         else:
             return "{1:.{0}f}".format(ndp,level)
 
+    def _levelLabel(self,level):
+        return self.formatLevel(level)+self._labelUnits
+
     def lineContourFeatures(self):
-        lines = self.computeContours()
-        fields=self.fields()
-        dx,dy=self._origin
+        x,y,z=self.data()
+        levels = self.levels()
+        usegrid=self.isGridded() and self._useGrid
+        try:
+            if usegrid:
+                gx,gy,gz=self.gridContourData()
+                cs = contour(gx, gy, gz, levels )
+            else:
+                trig,z=trigContourData()
+                cs = tricontour(trig, z, levels )
+        except:
+            raise ContourGenerationError(
+                traceback.format_exception_only(*sys.exc_info()))
+
+        fields = self.fields()
         zfield=self._zFieldName
-        for i, level, line in lines:
-            level=float(level)
-            levels=self.formatLevel(level) + self._labelUnits
+        dx,dy=self._origin
+        for i, line in enumerate(cs.collections):
+            level=float(cs.levels[i])
+            glines = []
             try:
-                feat = QgsFeature(fields)
-                geom=self.geometryFromMultiLineString(line)
+                for path in line.get_paths():
+                    if len(path.vertices) > 1:
+                        points=[QgsPointXY(x,y) for x,y in path.vertices]
+                        glines.append(points)
+                geom=QgsGeometry.fromMultiPolylineXY(glines)
                 geom.translate(dx,dy)
+                feat = QgsFeature(fields)
                 feat.setGeometry(geom)
                 feat['index']=i
                 feat[zfield]=level
-                feat['label']=levels
+                feat['label']=self._levelLabel(level)
                 yield feat
-            except Exception as ex:
+            except:
                 message=sys.exc_info()[1]
                 self._feedback.reportError(message)
 
-    def _rangeLabel(self,min,max,units):
+    def _rangeLabel(self,min,max):
         op=' - '
         lmin=''
         lmax=''
@@ -535,35 +523,136 @@ class ContourGenerator( QObject ):
             op='> '
             lmax=lmin
             lmin=''
-        return lmin+op+lmax+units
+        return lmin+op+lmax+self._labelUnits
 
+    def buildQgsMultipolygon(self,polygon):
+        '''
+        Construct QgsMultiPolygon from matplotlib version
+        '''
+        mpoly=[]
+        for path in polygon.get_paths():
+            path.should_simplify = False
+            poly = path.to_polygons()
+            if len(poly) < 1:
+                continue
+            if len(poly[0]) < 3:
+                # Have had one vertix polygon from matplotlib!
+                continue
+            mpoly.append([
+                [QgsPointXY(x,y) for x,y in p]
+                 for p in poly if len(p) > 3 ])
+        if len(mpoly) < 1:
+            return None
+        geom=QgsGeometry.fromMultiPolygonXY(mpoly)
+        geom.makeValid()
+        return geom
 
     def filledContourFeatures(self ):
-        polygons = self.computeFilledContours()
+        levels = self.levels()
+        x, y, z = self.data()
+        extend=self._extendFilled
+        usegrid=self.isGridded() and self._useGrid
+        try:
+            if usegrid:
+                gx,gy,gz=self.gridContourData()
+                cs = contourf(gx, gy, gz, levels, extend=extend)
+            else:
+                trig,z=self.trigContourData()
+                cs = tricontourf(trig, z, levels, extend=extend)
+        except:
+            raise ContourGenerationError(
+                traceback.format_exception_only(*sys.exc_info()))
+
+        levels = [float(l) for l in cs.levels]
+        if ContourExtendOption.extendBelow(extend):
+            levels = np.append([-np.inf,], levels)
+        if ContourExtendOption.extendAbove(extend):
+            levels = np.append(levels, [np.inf,])
+
         fields = self.fields()
-        symbols=[]
         ninvalid=0
         dx,dy=self._origin
         zminfield=self._zFieldName+'_min'
         zmaxfield=self._zFieldName+'_max'
-        for i, level_min, level_max, polygon in polygons:
-            level_min=float(level_min)
-            level_max=float(level_max)
-            label = self._rangeLabel(level_min,level_max,self._labelUnits)
+
+        for i, polygon in enumerate(cs.collections):
+            level_min=levels[i]
+            level_max=levels[i+1]
+            label = self._rangeLabel(level_min,level_max)
             try:
-                feat = QgsFeature(fields)
                 try:
-                    geom=self.geometryFromMultiPolygon(polygon)
+                    geom=self.buildQgsMultipolygon(polygon)
+                    if geom is None:
+                        continue
                     geom.translate(dx,dy)
-                    feat.setGeometry(geom)
                 except Exception as ex:
+                    raise
                     ninvalid += 1
-                    print("Exception:",ex)
+                    # print("Exception:",ex)
                     continue
+                feat = QgsFeature(fields)
+                feat.setGeometry(geom)
                 feat['index']=i
                 feat[zminfield]=level_min
                 feat[zmaxfield]=level_max
                 feat['label']=label
                 yield feat
             except Exception as ex:
+                raise
+                self._feedback.reportError(sys.exc_info()[1])
+
+        if ninvalid > 0:
+            self._feedback.pushInfo(tr('{0} invalid contour geometries discarded').format(ninvalid))
+
+    def layerContourFeatures(self):
+        levels = self.levels()
+        x, y, z = self.data()
+        usegrid=self.isGridded() and self._useGrid
+        try:
+            if usegrid:
+                gx,gy,gz=self.gridContourData()
+            else:
+                trig,z=self.trigContourData()
+        except:
+            raise ContourGenerationError(
+                    traceback.format_exception_only(*sys.exc_info()))
+
+        fields = self.fields()
+        ninvalid=0
+        dx,dy=self._origin
+        zfield=self._zFieldName
+
+        for i,level in enumerate(levels):
+            try:
+                if usegrid:
+                    cs = contourf(gx, gy, gz, [level], extend=ContourExtendOption.below)
+                else:
+                    cs = tricontourf(trig, z, [level], extend=ContourExtendOption.below)
+            except:
+                raise ContourGenerationError(
+                    traceback.format_exception_only(*sys.exc_info()))
+            if len(cs.collections) < 1:
+                continue
+            polygon=cs.collections[0]
+            try:
+                try:
+                    geom=self.buildQgsMultipolygon(polygon)
+                    if geom is None:
+                        continue
+                    geom.translate(dx,dy)
+                except Exception as ex:
+                    ninvalid += 1
+                    # print("Exception:",ex)
+                    continue
+                feat = QgsFeature(fields)
+                feat.setGeometry(geom)
+                feat['index']=i
+                feat[zfield]=level
+                feat['label']=self._levelLabel(level)
+                yield feat
+            except Exception as ex:
                 self._feedback.reportError(ex.message)
+
+        if ninvalid > 0:
+            self._feedback.pushInfo(tr('{0} invalid contour geometries discarded').format(ninvalid))
+

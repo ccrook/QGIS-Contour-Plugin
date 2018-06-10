@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ContourDialogUi.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ class Ui_ContourDialog(object):
     def setupUi(self, ContourDialog):
         ContourDialog.setObjectName("ContourDialog")
         ContourDialog.setWindowModality(QtCore.Qt.NonModal)
-        ContourDialog.resize(658, 675)
+        ContourDialog.resize(658, 705)
         ContourDialog.setSizeGripEnabled(True)
         self.gridLayout_3 = QtWidgets.QGridLayout(ContourDialog)
         self.gridLayout_3.setObjectName("gridLayout_3")
@@ -29,13 +29,13 @@ class Ui_ContourDialog(object):
         self.label_4 = QtWidgets.QLabel(self.groupBox_2)
         self.label_4.setObjectName("label_4")
         self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_4)
-        self.uDataField = gui.QgsFieldExpressionWidget(self.groupBox_2)
+        self.uDataField = QgsFieldExpressionWidget(self.groupBox_2)
         self.uDataField.setObjectName("uDataField")
         self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.uDataField)
         self.uSelectedOnly = QtWidgets.QCheckBox(self.groupBox_2)
         self.uSelectedOnly.setObjectName("uSelectedOnly")
         self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.uSelectedOnly)
-        self.uSourceLayer = gui.QgsMapLayerComboBox(self.groupBox_2)
+        self.uSourceLayer = QgsMapLayerComboBox(self.groupBox_2)
         self.uSourceLayer.setObjectName("uSourceLayer")
         self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.uSourceLayer)
         self.gridLayout.addLayout(self.formLayout_2, 0, 0, 1, 1)
@@ -93,6 +93,9 @@ class Ui_ContourDialog(object):
         self.uBoth = QtWidgets.QRadioButton(self.groupBox)
         self.uBoth.setObjectName("uBoth")
         self.horizontalLayout_7.addWidget(self.uBoth)
+        self.uLayerContours = QtWidgets.QRadioButton(self.groupBox)
+        self.uLayerContours.setObjectName("uLayerContours")
+        self.horizontalLayout_7.addWidget(self.uLayerContours)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_7.addItem(spacerItem2)
         self.gridLayout_2.addLayout(self.horizontalLayout_7, 0, 0, 1, 3)
@@ -267,7 +270,7 @@ class Ui_ContourDialog(object):
         self.uApplyColors.setText("")
         self.uApplyColors.setObjectName("uApplyColors")
         self.horizontalLayout_4.addWidget(self.uApplyColors)
-        self.uColorRamp = gui.QgsColorRampButton(self.groupBox_3)
+        self.uColorRamp = QgsColorRampButton(self.groupBox_3)
         self.uColorRamp.setObjectName("uColorRamp")
         self.horizontalLayout_4.addWidget(self.uColorRamp)
         self.uReverseRamp = QtWidgets.QCheckBox(self.groupBox_3)
@@ -318,7 +321,8 @@ class Ui_ContourDialog(object):
         ContourDialog.setTabOrder(self.uUseGrid, self.uLinesContours)
         ContourDialog.setTabOrder(self.uLinesContours, self.uFilledContours)
         ContourDialog.setTabOrder(self.uFilledContours, self.uBoth)
-        ContourDialog.setTabOrder(self.uBoth, self.uMethod)
+        ContourDialog.setTabOrder(self.uBoth, self.uLayerContours)
+        ContourDialog.setTabOrder(self.uLayerContours, self.uMethod)
         ContourDialog.setTabOrder(self.uMethod, self.uContourInterval)
         ContourDialog.setTabOrder(self.uContourInterval, self.uNContour)
         ContourDialog.setTabOrder(self.uNContour, self.uSetMinimum)
@@ -352,14 +356,11 @@ class Ui_ContourDialog(object):
         self.uLinesContours.setText(_translate("ContourDialog", "contour lines"))
         self.uFilledContours.setText(_translate("ContourDialog", "filled contours"))
         self.uBoth.setText(_translate("ContourDialog", "both"))
+        self.uLayerContours.setText(_translate("ContourDialog", "contour layers"))
         self.label_5.setText(_translate("ContourDialog", "Minimum"))
         self.label.setText(_translate("ContourDialog", "Number"))
         self.uNContour.setStatusTip(_translate("ContourDialog", "Number of levels between min and max value (from data field)"))
         self.label_10.setText(_translate("ContourDialog", "Extend"))
-        self.uExtend.setItemText(0, _translate("ContourDialog", "neither"))
-        self.uExtend.setItemText(1, _translate("ContourDialog", "min"))
-        self.uExtend.setItemText(2, _translate("ContourDialog", "max"))
-        self.uExtend.setItemText(3, _translate("ContourDialog", "both"))
         self.uSetMaximum.setText(_translate("ContourDialog", "Set"))
         self.label_7.setText(_translate("ContourDialog", "Method"))
         self.uSetMinimum.setText(_translate("ContourDialog", "Set"))
@@ -377,4 +378,6 @@ class Ui_ContourDialog(object):
         self.uHelpButton.setText(_translate("ContourDialog", "Help"))
         self.uAddButton.setText(_translate("ContourDialog", "Add"))
 
-from qgis import gui
+from qgis.gui import QgsColorRampButton
+from qgis.gui import QgsFieldExpressionWidget
+from qgis.gui import QgsMapLayerComboBox

@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>675</height>
+    <height>705</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -200,6 +200,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QRadioButton" name="uLayerContours">
+          <property name="text">
+           <string>contour layers</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_5">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -240,7 +247,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-		<string>Number</string>
+         <string>Number</string>
         </property>
         <property name="buddy">
          <cstring>uNContour</cstring>
@@ -287,26 +294,6 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
-        <item>
-         <property name="text">
-          <string>neither</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>min</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>max</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>both</string>
-         </property>
-        </item>
        </widget>
       </item>
       <item row="7" column="1">
@@ -685,6 +672,7 @@
   <tabstop>uLinesContours</tabstop>
   <tabstop>uFilledContours</tabstop>
   <tabstop>uBoth</tabstop>
+  <tabstop>uLayerContours</tabstop>
   <tabstop>uMethod</tabstop>
   <tabstop>uContourInterval</tabstop>
   <tabstop>uNContour</tabstop>

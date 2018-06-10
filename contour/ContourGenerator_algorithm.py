@@ -44,7 +44,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterString,
                        QgsProcessingParameterFeatureSink,
                        QgsWkbTypes)
-from .ContourGenerator import ContourGenerator
+from .ContourGenerator import ContourGenerator, ContourType, ContourExtendOption
 from . import ContourMethod
 from . import resources
 
@@ -54,57 +54,48 @@ def tr(string):
 
 class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
     """
-    This is an example algorithm that takes a vector layer and
-    creates a new identical one.
-
-    It is meant to be used as an example of how to create your own
-    algorithms and explain methods and variables used to do it. An
-    algorithm like this will be available in all elements, and there
-    is not need for additional work.
-
-    All Processing algorithms should extend the QgsProcessingAlgorithm
-    class.
+    Algorithm to calculate contour lines or filled contours from
+    attribute values of a point data layer.  
     """
 
     # Constants used to refer to parameters and outputs. They will be
     # used when calling the algorithm from another algorithm, or when
     # calling from the QGIS console.
 
-    OutputLayer = 'OutputLayer'
-    InputLayer = 'InputLayer'
-    InputField = 'InputField'
-    ContourMethodName = 'ContourMethod'
-    NContour= 'NContour'
-    MinContourValue = 'MinContourValue'
-    MaxContourValue = 'MaxContourValue'
-    ContourInterval = 'ContourInterval'
-    ContourLevels = 'ContourLevels'
-    ContourType = 'ContourType'
-    ExtendFilled = 'ExtendFilled'
-    LabelDecimalPlaces = 'LabelDecimalPlaces'
-    LabelTrimZeros = 'LabelTrimZeros'
-    LabelUnits = 'LabelUnits'
-    DiscardTolerance = 'DiscardTolerance'
+    PrmOutputLayer = 'OutputLayer'
+    PrmInputLayer = 'InputLayer'
+    PrmInputField = 'InputField'
+    PrmContourMethod = 'ContourMethod'
+    PrmNContour= 'NContour'
+    PrmMinContourValue = 'MinContourValue'
+    PrmMaxContourValue = 'MaxContourValue'
+    PrmContourInterval = 'ContourInterval'
+    PrmContourLevels = 'ContourLevels'
+    PrmContourType = 'ContourType'
+    PrmExtendContour = 'ExtendContour'
+    PrmLabelDecimalPlaces = 'LabelDecimalPlaces'
+    PrmLabelTrimZeros = 'LabelTrimZeros'
+    PrmLabelUnits = 'LabelUnits'
+    PrmDiscardTolerance = 'DiscardTolerance'
 
-    ContourTypeOptions=[tr('Contour lines'),tr('Filled contours')]
-    ContourTypeValues=['line','filled']
+    ContourTypeValues=ContourType.types()
+    ContourTypeOptions=[ContourType.description(t) for t in ContourTypeValues]
 
-    ExtendFilledOptions=[("Don't fill below or above contours"),tr("Fill beneath minimum contour"),tr("Fill above maximum contour"),tr("Fill below and above")]
-    ExtendFilledValues=['none','below','above','both']
+    ExtendContourValues=ContourExtendOption.options()
+    ExtendContourOptions=[ContourExtendOption.description(t) for t in ExtendContourValues]
 
     def initAlgorithm(self, config):
         """
-        A lot of parameters for the processing algorithm.  
-        Would be cleaner to create a widget, at least for the contour 
-        levels.
+        Set up parameters for the ContourGenerator algorithm
         """
+        #Would be cleaner to create a widget, at least for the contour levels.
 
         # Add the input point vector features source. 
         # geometry.
 
         self.addParameter(
             QgsProcessingParameterFeatureSource(
-                self.InputLayer,
+                self.PrmInputLayer,
                 tr('Input point layer'),
                 [QgsProcessing.TypeVectorPoint]
             )
@@ -114,9 +105,9 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterExpression(
-                self.InputField,
+                self.PrmInputField,
                 tr('Value to contour'),
-                parentLayerParameterName=self.InputLayer
+                parentLayerParameterName=self.PrmInputLayer
             )
         )
 
@@ -125,7 +116,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.DiscardTolerance,
+                self.PrmDiscardTolerance,
                 tr('Discard duplicate point radius'),
                 QgsProcessingParameterNumber.Double,
                 minValue=0.0,
@@ -137,16 +128,16 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterEnum(
-                self.ContourType,
+                self.PrmContourType,
                 tr("Contour type"),
                 self.ContourTypeOptions
             ))
 
         self.addParameter(
             QgsProcessingParameterEnum(
-                self.ExtendFilled,
+                self.PrmExtendContour,
                 tr("Filled contour options"),
-                self.ExtendFilledOptions
+                self.ExtendContourOptions
             ))
 
         # Define the contour level calculation method
@@ -156,14 +147,14 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterEnum(
-                self.ContourMethodName,
+                self.PrmContourMethod,
                 tr('Method used to calculate the contour levels'),
                 methodNames
             ))
 
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.NContour,
+                self.PrmNContour,
                 tr('Number (or max number) of contours'),
                 defaultValue=20,
                 minValue=1
@@ -171,7 +162,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.MinContourValue,
+                self.PrmMinContourValue,
                 tr('Minimum contour level (omit to use data minimum)'),
                 type=QgsProcessingParameterNumber.Double,
                 optional=True
@@ -179,7 +170,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.MaxContourValue,
+                self.PrmMaxContourValue,
                 tr('Maximum contour level (omit to use data maximum)'),
                 type=QgsProcessingParameterNumber.Double,
                 optional=True
@@ -187,7 +178,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.ContourInterval,
+                self.PrmContourInterval,
                 tr('Contour interval'),
                 QgsProcessingParameterNumber.Double,
                 minValue=0.0,
@@ -196,7 +187,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterString(
-                self.ContourLevels,
+                self.PrmContourLevels,
                 tr('Contour levels'),
                 multiLine=True,
                 optional=True
@@ -207,7 +198,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.LabelDecimalPlaces,
+                self.PrmLabelDecimalPlaces,
                 tr('Label decimal places (-1 for auto)'),
                 QgsProcessingParameterNumber.Integer,
                 defaultValue=-1,
@@ -218,21 +209,21 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterBoolean(
-                self.LabelTrimZeros,
+                self.PrmLabelTrimZeros,
                 tr("Trim trailing zeros from labels"),
                 False
             ))
 
         self.addParameter(
             QgsProcessingParameterBoolean(
-                self.LabelTrimZeros,
+                self.PrmLabelTrimZeros,
                 tr("Trim trailing zeros from labels"),
                 False
             ))
 
         self.addParameter(
             QgsProcessingParameterString(
-                self.LabelUnits,
+                self.PrmLabelUnits,
                 tr("Units to append to label values"),
                 "",
                 optional=True
@@ -242,7 +233,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterFeatureSink(
-                self.OutputLayer,
+                self.PrmOutputLayer,
                 tr('Output layer')
             )
         )
@@ -251,34 +242,35 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         # Retrieve the contour parameters
         
-        source = self.parameterAsSource(parameters, self.InputLayer, context)
-        field = self.parameterAsExpression( parameters, self.InputField, context )
-        discardTolerance = self.parameterAsDouble( parameters, self.DiscardTolerance, context )
+        source = self.parameterAsSource(parameters, self.PrmInputLayer, context)
+        field = self.parameterAsExpression( parameters, self.PrmInputField, context )
+        discardTolerance = self.parameterAsDouble( parameters, self.PrmDiscardTolerance, context )
         
-        methodid = self.parameterAsEnum( parameters, self.ContourMethodName, context)
-        ncontour = self.parameterAsInt( parameters, self.NContour, context )
+        methodid = self.parameterAsEnum( parameters, self.PrmContourMethod, context)
+        ncontour = self.parameterAsInt( parameters, self.PrmNContour, context )
         zmin=None
         zmax=None
-        if parameters[self.MinContourValue] is not None:
-            zmin = self.parameterAsDouble( parameters, self.MinContourValue, context )
-        if parameters[self.MaxContourValue] is not None:
-            zmax = self.parameterAsDouble( parameters, self.MaxContourValue, context )
-        interval = self.parameterAsDouble( parameters, self.ContourInterval, context )
-        levels = self.parameterAsString( parameters, self.ContourLevels, context )
+        if parameters[self.PrmMinContourValue] is not None:
+            zmin = self.parameterAsDouble( parameters, self.PrmMinContourValue, context )
+        if parameters[self.PrmMaxContourValue] is not None:
+            zmax = self.parameterAsDouble( parameters, self.PrmMaxContourValue, context )
+        interval = self.parameterAsDouble( parameters, self.PrmContourInterval, context )
+        levels = self.parameterAsString( parameters, self.PrmContourLevels, context )
 
-        contourtypeid = self.parameterAsEnum( parameters, self.ContourType, context )
+        contourtypeid = self.parameterAsEnum( parameters, self.PrmContourType, context )
         contourtype = self.ContourTypeValues[contourtypeid]
-        extendfilledid = self.parameterAsEnum( parameters, self.ExtendFilled, context )
-        extendfilled = self.ExtendFilledValues[extendfilledid]
-        labelndp = self.parameterAsInt( parameters, self.LabelDecimalPlaces, context )
-        labeltrim = self.parameterAsBool( parameters, self.LabelTrimZeros, context )
-        labelunits = self.parameterAsString( parameters, self.LabelUnits, context )
+
+        extendid = self.parameterAsEnum( parameters, self.PrmExtendContour, context )
+        extend = self.ExtendContourValues[extendid]
+        labelndp = self.parameterAsInt( parameters, self.PrmLabelDecimalPlaces, context )
+        labeltrim = self.parameterAsBool( parameters, self.PrmLabelTrimZeros, context )
+        labelunits = self.parameterAsString( parameters, self.PrmLabelUnits, context )
 
         feedback.pushInfo('zmin {0}'.format(zmin))
 
         # Construct and configure the contour generator
 
-        method=ContourMethod.methods[methodid].code
+        method=ContourMethod.methods[methodid].id
 
         params={
             'min':zmin,
@@ -290,10 +282,10 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             }   
 
         generator=ContourGenerator(source,field,feedback)
-        generator.setDiscardTolerance( discardTolerance )
+        generator.setpDiscardTolerance( discardTolerance )
         generator.setContourMethod( method, params )
-        generator.setContourType( contourtype )
-        generator.setExtendFilled( extendfilled )
+        generator.setpContourType( contourtype )
+        generator.setContourExtendOption( extend )
         generator.setLabelFormat( labelndp, labeltrim, labelunits )
 
         isgridded=generator.isGridded()
@@ -305,7 +297,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         fields=generator.fields()
         crs=generator.crs()
 
-        (sink, dest_id) = self.parameterAsSink(parameters, self.OutputLayer,
+        (sink, dest_id) = self.parameterAsSink(parameters, self.PrmOutputLayer,
                 context, fields, wkbtype, crs )
 
         # Add a feature in the sink
@@ -313,7 +305,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         for feature in generator.contourFeatures():
             sink.addFeature(feature, QgsFeatureSink.FastInsert)
 
-        return {self.OutputLayer: dest_id}
+        return {self.PrmOutputLayer: dest_id}
 
     def icon(self):
         return QIcon(":/plugins/contour/contour.png")

@@ -8,7 +8,7 @@ from collections import namedtuple
 class ContourMethodError( RuntimeError ):
     pass
 
-ContourMethod=namedtuple('ContourMethod','code name calc required optional description')
+ContourMethod=namedtuple('ContourMethod','id name calc required optional description')
 
 methods=[]
 
@@ -70,13 +70,13 @@ def _methodFunc(z,f,name,req,opt,kwa):
             kwv[k]=_evalParam(k,v)
     return f(z,*pav,**kwv)
 
-def contourmethod(code=None,name=None,description=None):
+def contourmethod(id=None,name=None,description=None):
     def mf2( f ):
-        nonlocal code, name, description
-        if code is None: 
-            code=f.__name__
+        nonlocal id, name, description
+        if id is None: 
+            id=f.__name__
         if name is None:
-            name=code
+            name=id
         if description is None:
             description=f.__doc__
         sig=inspect.signature(f)
@@ -89,7 +89,7 @@ def contourmethod(code=None,name=None,description=None):
             else:
                 opt.append(pn)
         func=lambda z,**kwa: _methodFunc(z,f,name,req,opt,kwa)
-        methods.append(ContourMethod(code,name,func,req,opt,description))
+        methods.append(ContourMethod(id,name,func,req,opt,description))
         return func
     return mf2
 
@@ -182,10 +182,15 @@ def parseContours( z, levels ):
     'Contours at specified levels'
     return levels
 
+def getMethod( id ):
+    for m in methods:
+        if m.id == id:
+            return m
+    return None
 
 def calculateLevels( z, method, **params ):
     method=method.lower()
-    for m in methods:
-        if m.code==method:
-            return m.calc(z,**params)
+    m=getMethod(method)
+    if m is not None:
+        return m.calc(z,**params)
     raise ContourMethodError("Invalid contouring method {0}".format(method))

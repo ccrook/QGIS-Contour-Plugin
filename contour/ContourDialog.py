@@ -3,7 +3,7 @@
 #
 #       contour.py
 #
-#       Copyright 2009 Lionel Roubeyrie <lionel.roubeyrie@gmail.com>
+#       Copyright 2018 Chris Crook <ccrook@linz.govt.nz>
 #
 #       This program is free software; you can redistribute it and/or modify
 #       it under the terms of the GNU General Public License as published by
@@ -20,9 +20,6 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
-#  Modified by Chris Crook <ccrook@linz.govt.nz> to contour irregular data
-
-
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -31,7 +28,8 @@ from qgis.core import *
 from qgis.gui import QgsMessageBar
 from . import resources
 from . import ContourMethod
-from .ContourGenerator import ContourGenerator
+from .ContourMethod import ContourMethodError
+from .ContourGenerator import ContourGenerator, ContourType, ContourExtendOption
 
 import sys
 import os.path
@@ -55,6 +53,7 @@ EPSILON = 1.e-27
 LINES='lines'
 FILLED='filled'
 BOTH='both'
+LAYERS='layer'
 
 class ContourDialogPlugin:
 
@@ -100,7 +99,27 @@ class ContourGenerationError(ContourError):
     pass
 
 ###########################################################
+
 class ContourDialog(QDialog, Ui_ContourDialog):
+
+    class Feedback:
+
+        def __init__( self, iface, progress ):
+            self._iface=iface
+            self._progress=progress
+
+        def isCanceled( self ):
+            return False
+
+        def setProgress( self, percent ):
+            if self._progress:
+                self._progress.setValue(percent)
+
+        def pushInfo( self, info ):
+            self._iface.messageBar().pushInfo('',info)
+
+        def reportError( self, message, fatal=False ):
+            self._iface.messageBar().pushWarning('Error' if fatal else 'Warning',message)
 
     def __init__(self, iface):
         QDialog.__init__(self)
@@ -112,7 +131,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self._loadingLayer = False
         self._contourId = ''
         self._replaceLayerSet = None
-        self._generator=ContourGenerator()
         self._canEditList = False
 
         # Set up the user interface from Designer.
@@ -138,7 +156,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uExtend.setEnabled(False)
         self.progressBar.setValue(0)
         for method in ContourMethod.methods:
-            self.uMethod.addItem(method.name,method)
+            self.uMethod.addItem(method.name,method.id)
+        for option in ContourExtendOption.options():
+            self.uExtend.addItem(ContourExtendOption.description(option),option)
+
+        self._feedback=ContourDialog.Feedback(iface,self.progressBar)
+        self._generator=ContourGenerator(feedback=self._feedback)
 
         self.loadSettings()
 
@@ -170,6 +193,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uLinesContours.toggled[bool].connect(self.modeToggled)
         self.uFilledContours.toggled[bool].connect(self.modeToggled)
         self.uBoth.toggled[bool].connect(self.modeToggled)
+        self.uLayerContours.toggled[bool].connect(self.modeToggled)
 
         # populate layer list
         if self.uSourceLayer.count() <= 0:
@@ -245,14 +269,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     self.uBoth.setChecked(True)
                 else:
                     self.uFilledContours.setChecked(True)
+            elif LAYERS in layerSet:
+                    self.uLayerContours.setChecked(True)
             else:
                 self.uLinesContours.setChecked(True)
-            index = self.uMethod.findText(properties.get('Method'))
+            index = self.uMethod.findData(properties.get('Method'))
             if index >= 0:
                 self.uMethod.setCurrentIndex(index)
-            index = self.uExtend.findText(properties.get('Extend'))
+            index = self.uExtend.findData(properties.get('Extend'))
             if index >= 0:
                 self.uExtend.setCurrentIndex(index)
+            self.uExtend.setEnabled(self.uFilledContours.isChecked() or self.uBoth.isChecked())
             self.uPrecision.setValue(int(properties.get('LabelPrecision')))
             self.uTrimZeroes.setChecked(properties.get('TrimZeroes') == 'yes' )
             self.uLabelUnits.setText(properties.get('LabelUnits') or '')
@@ -391,9 +418,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                          val)
         if ok:
             values=newval.split()
+            fval=[]
             for v in values:
                 try:
-                    float(v)
+                    fval.append(float(v))
                 except:
                     QMessageBox.warning(self._iface.mainWindow(), "Contour error",
                                         "Invalid contour value "+v)
@@ -405,22 +433,23 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 self.enableOkButton()
                 return
             values.sort(key=float)
+            index=self.uMethod.findData('manual')
+            if index >= 0:
+                self.uMethod.setCurrentIndex(index)
             self.uNContour.setValue(len(values))
             self.uLevelsList.clear()
             for v in values:
                 self.uLevelsList.addItem(v)
+            self._generator.setContourLevels(fval)
             self.enableOkButton()
 
     def getMethod( self ):
         index=self.uMethod.currentIndex()
-        method=None
-        if index >= 0:
-            method=self.uMethod.itemData(index)
-        return method
+        methodid=self.uMethod.itemData(index)
+        return ContourMethod.getMethod(methodid)
 
     def contourLevelParams( self ):
         method=self.getMethod()
-        methodcode=method.code
         ncontour=self.uNContour.value()
         interval=self.uContourInterval.value()
         zmin=None
@@ -440,7 +469,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'mantissa': None,
             'levels': levels
             }
-        return methodcode, params
+        return method.id, params
 
     def enableContourParams( self ):
         method=self.getMethod()
@@ -477,7 +506,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         # Use ContourGenerator code
         methodcode,params=self.contourLevelParams()
         self.setLabelFormat()
-        levels=self._generator.setContourMethod(methodcode,params)
+        try:
+            levels=self._generator.setContourMethod(methodcode,params)
+        except ContourMethodError as ex:
+            self._feedback.pushInfo(ex.message())
+
         self.showLevels()
         self.enableOkButton()
 
@@ -489,7 +522,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def modeToggled(self,enabled):
         if enabled:
-            self.uExtend.setEnabled( not self.uLinesContours.isChecked())
+            self.uExtend.setEnabled(self.uFilledContours.isChecked() or self.uBoth.isChecked())
             self.enableOkButton()
 
     def enableOkButton(self):
@@ -526,9 +559,11 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
                 self.setLabelFormat()
                 if self.uLinesContours.isChecked() or self.uBoth.isChecked():
-                    self.makeContourLayer('line')
+                    self.makeContourLayer(ContourType.line)
                 if self.uFilledContours.isChecked() or self.uBoth.isChecked():
-                    self.makeContourLayer('filled')
+                    self.makeContourLayer(ContourType.filled)
+                if self.uLayerContours.isChecked():
+                    self.makeContourLayer(ContourType.layer)
                 oldLayerSet = self.contourLayerSet( replaceContourId )
                 if oldLayerSet:
                     for layer in list(oldLayerSet.values()):
@@ -610,8 +645,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'LabelUnits' : str(self.uLabelUnits.text()),
             'MinContour' : str(self.uMinContour.value()) if self.uSetMinimum.isChecked() else '',
             'MaxContour' : str(self.uMaxContour.value()) if self.uSetMaximum.isChecked() else '',
-            'Extend' : self.uExtend.itemText(self.uExtend.currentIndex()),
-            'Method' : self.uMethod.itemText(self.uMethod.currentIndex()),
+            'Extend' : self.uExtend.itemData(self.uExtend.currentIndex()),
+            'Method' : self.uMethod.itemData(self.uMethod.currentIndex()),
             'ApplyColors' : 'yes' if self.uApplyColors.isChecked() else 'no',
             'ColorRamp' : self.colorRampToString( self.uColorRamp.colorRamp()),
             'ReverseRamp' : 'yes' if self.uReverseRamp.isChecked() else 'no',
@@ -707,6 +742,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     def makeContourLayer(self,ctype):
         self._generator.setContourType(ctype)
+        extend=self.uExtend.itemData(self.uExtend.currentIndex())
+        self._generator.setContourExtendOption(extend)
         name = self.uOutputName.text()
         fields=self._generator.fields()
         geomtype=self._generator.wkbtype()
@@ -719,7 +756,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             levels.append((feature['index'],feature['label']))
         vl.updateExtents()
         vl.commitChanges()
-        rendtype='line' if ctype == 'line' else 'polygon'
+        rendtype='line' if ctype == ContourType.line else 'polygon'
         self.applyRenderer(vl,rendtype,levels)
         self.addLayer(vl)
 
@@ -811,13 +848,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def saveSettings( self ):
         settings=QSettings()
         base='/plugins/contour/'
-        mode=(BOTH if self.uBoth.isChecked() else
+        mode=(LAYERS if self.uLayerContours.isChecked() else
+              BOTH if self.uBoth.isChecked() else
               FILLED if self.uFilledContours.isChecked() else
               LINES)
         settings.setValue(base+'mode',mode)
         settings.setValue(base+'levels',str(self.uNContour.value()))
-        settings.setValue(base+'extend',self.uExtend.itemText(self.uExtend.currentIndex()))
-        settings.setValue(base+'method',self.uMethod.itemText(self.uMethod.currentIndex()))
+        settings.setValue(base+'extend',self.uExtend.itemData(self.uExtend.currentIndex()))
+        settings.setValue(base+'method',self.uMethod.itemData(self.uMethod.currentIndex()))
         settings.setValue(base+'precision',str(self.uPrecision.value()))
         settings.setValue(base+'trimZeroes','yes' if self.uTrimZeroes.isChecked() else 'no')
         settings.setValue(base+'units',self.uLabelUnits.text())
@@ -830,7 +868,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         base='/plugins/contour/'
         try:
             mode=settings.value(base+'mode')
-            if mode==BOTH:
+            if mode==LAYERS:
+                self.uLayerContours.setChecked(True)
+            elif mode==BOTH:
                 self.uBoth.setChecked(True)
             elif mode==FILLED:
                 self.uFilledContours.setChecked(True)
@@ -842,12 +882,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 self.uNContour.setValue(int(levels))
 
             extend=settings.value(base+'extend')
-            index = self.uExtend.findText(extend)
+            index = self.uExtend.findData(extend)
             if index >= 0:
                 self.uExtend.setCurrentIndex(index)
 
             method=settings.value(base+'method')
-            index = self.uMethod.findText(method)
+            index = self.uMethod.findData(method)
             if index >= 0:
                 self.uMethod.setCurrentIndex(index)
 
