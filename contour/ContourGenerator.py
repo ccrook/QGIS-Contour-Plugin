@@ -63,7 +63,7 @@ class ContourExtendOption:
         both: tr('Fill below minimum and above maximum contour'),
         below: tr('Fill below minimum contour'),
         above: tr('Fill above maximum contour'),
-        neither: tr('Don''t fill below or above maximum contour')
+        neither: tr('Don\'t fill below or above maximum contour')
         }
 
     def options():
@@ -348,12 +348,13 @@ class ContourGenerator( QObject ):
     def levels( self ):
         if self._levels is None:
             x,y,z = self.data()
-            if z is not None:
-                method=self._contourMethod
-                params=self._contourMethodParams
-                if method is None:
-                    raise ContourError(tr("Contouring method not defined"))
-                self._levels=ContourMethod.calculateLevels(z,method,**params)
+            if z is None:
+                raise ContourError(tr("Contour data not defined"))
+            method=self._contourMethod
+            params=self._contourMethodParams
+            if method is None:
+                raise ContourError(tr("Contouring method not defined"))
+            self._levels=ContourMethod.calculateLevels(z,method,**params)
         return self._levels
 
     def crs( self ):
@@ -586,9 +587,7 @@ class ContourGenerator( QObject ):
                         continue
                     geom.translate(dx,dy)
                 except Exception as ex:
-                    raise
                     ninvalid += 1
-                    # print("Exception:",ex)
                     continue
                 feat = QgsFeature(fields)
                 feat.setGeometry(geom)

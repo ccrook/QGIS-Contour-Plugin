@@ -139,7 +139,7 @@ class DataGridder:
         # in turn.
         uwid=(np.max(u)-np.min(u))*2.0
         iu=np.argsort(v)
-        urow=(np.arange(npt)/ncol)*uwid
+        urow=np.floor_divide(np.arange(npt),ncol)*uwid
         t=np.vstack((u[iu],v[iu],urow)).T
         urow1=u
         urow1[iu] += urow

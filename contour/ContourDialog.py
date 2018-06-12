@@ -184,7 +184,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uNContour.valueChanged[int].connect(self.computeLevels)
         self.uPrecision.valueChanged[int].connect(self.updatePrecision)
         self.uTrimZeroes.toggled[bool].connect(self.updatePrecision)
-        self.uLevelsList.itemDoubleClicked[QListWidgetItem].connect(self.editLevel)
+        self.uLevelsList.itemClicked[QListWidgetItem].connect(self.editLevel)
         self.uHelpButton.clicked.connect(self.showHelp)
         self.uAddButton.clicked.connect(self.addContours)
         self.uCloseButton.clicked.connect(self.closeDialog)
@@ -403,10 +403,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 zf='expr'
             self.uOutputName.setText("%s_%s"%(self._layer.name(), zf ))
 
-    def editLevel(self, item):
+    def editLevel(self, item=None):
         if not self._canEditList:
             return
-        if QApplication.keyboardModifiers() & Qt.ShiftModifier:
+        if item is None or QApplication.keyboardModifiers() & Qt.ShiftModifier:
             list = self.uLevelsList
             val=' '.join([list.item(i).text() for i in range(0, list.count())])
         else:
@@ -431,15 +431,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             if len(values) == 1: 
                 item.setText(newval)
                 self.enableOkButton()
-                return
-            values.sort(key=float)
-            index=self.uMethod.findData('manual')
-            if index >= 0:
-                self.uMethod.setCurrentIndex(index)
-            self.uNContour.setValue(len(values))
-            self.uLevelsList.clear()
-            for v in values:
-                self.uLevelsList.addItem(v)
+            else:
+                values.sort(key=float)
+                index=self.uMethod.findData('manual')
+                if index >= 0:
+                    self.uMethod.setCurrentIndex(index)
+                self.uNContour.setValue(len(values))
+                self.uLevelsList.clear()
+                for v in values:
+                    self.uLevelsList.addItem(v)
+
+            fval=self.getLevels()
             self._generator.setContourLevels(fval)
             self.enableOkButton()
 
@@ -505,18 +507,17 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def computeLevels(self):
         # Use ContourGenerator code
         methodcode,params=self.contourLevelParams()
-        self.setLabelFormat()
-        try:
-            levels=self._generator.setContourMethod(methodcode,params)
-        except ContourMethodError as ex:
-            self._feedback.pushInfo(ex.message())
-
+        self._generator.setContourMethod(methodcode,params)
         self.showLevels()
         self.enableOkButton()
 
     def showLevels(self):
-        levels=self._generator.levels()
         self.uLevelsList.clear()
+        try:
+            levels=self._generator.levels()
+        except (ContourMethodError,ContourError) as ex:
+            self._feedback.pushInfo(ex.message())
+            return
         for i in range(0, len(levels)):
             self.uLevelsList.addItem(self.formatLevel(levels[i]))
 
@@ -823,7 +824,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             else:
                 symbol=QgsFillSymbol.createSimple({'outline_style':'no'})
             symbol.setColor(color)
-            category=QgsRendererCategory(i,symbol,label)
+            category=QgsRendererCategory(value,symbol,label)
             renderer.addCategory(category)
         layer.setRenderer(renderer)
 

@@ -6,7 +6,8 @@ from collections import namedtuple
 # Need to use QObject.tr on method name, description
 
 class ContourMethodError( RuntimeError ):
-    pass
+    def message():
+        return self.args[0] if len(args)  > 1 else "Exception"
 
 ContourMethod=namedtuple('ContourMethod','id name calc required optional description')
 

@@ -128,10 +128,6 @@ class Ui_ContourDialog(object):
         sizePolicy.setHeightForWidth(self.uExtend.sizePolicy().hasHeightForWidth())
         self.uExtend.setSizePolicy(sizePolicy)
         self.uExtend.setObjectName("uExtend")
-        self.uExtend.addItem("")
-        self.uExtend.addItem("")
-        self.uExtend.addItem("")
-        self.uExtend.addItem("")
         self.gridLayout_2.addWidget(self.uExtend, 8, 1, 1, 1)
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
@@ -289,6 +285,7 @@ class Ui_ContourDialog(object):
         self.uCloseButton.setObjectName("uCloseButton")
         self.gridLayout_3.addWidget(self.uCloseButton, 3, 3, 1, 1)
         self.uHelpButton = QtWidgets.QPushButton(ContourDialog)
+        self.uHelpButton.setAutoDefault(False)
         self.uHelpButton.setObjectName("uHelpButton")
         self.gridLayout_3.addWidget(self.uHelpButton, 3, 1, 1, 1)
         self.uAddButton = QtWidgets.QPushButton(ContourDialog)
@@ -338,8 +335,7 @@ class Ui_ContourDialog(object):
         ContourDialog.setTabOrder(self.uLabelUnits, self.uApplyColors)
         ContourDialog.setTabOrder(self.uApplyColors, self.uColorRamp)
         ContourDialog.setTabOrder(self.uColorRamp, self.uReverseRamp)
-        ContourDialog.setTabOrder(self.uReverseRamp, self.uHelpButton)
-        ContourDialog.setTabOrder(self.uHelpButton, self.uAddButton)
+        ContourDialog.setTabOrder(self.uReverseRamp, self.uAddButton)
         ContourDialog.setTabOrder(self.uAddButton, self.uCloseButton)
 
     def retranslateUi(self, ContourDialog):
