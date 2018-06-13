@@ -58,6 +58,14 @@ def _evalParam(p,v):
         raise ContourMethodError(tr('Invalid contour method parameter {0}').format(p))
     return _paramtypes[p](p,v)
 
+def _sortedLevels(levels):
+    levels=np.array(levels)
+    levels.sort()
+    diff=np.ones(levels.shape)
+    diff[1:]=levels[1:]-levels[:-1]
+    levels=levels[diff > 0]
+    return levels
+
 def _methodFunc(z,f,name,req,opt,kwa):
     pav=[]
     kwv={}
@@ -69,7 +77,7 @@ def _methodFunc(z,f,name,req,opt,kwa):
         v=kwa.get(k)
         if v is not None:
             kwv[k]=_evalParam(k,v)
-    return f(z,*pav,**kwv)
+    return _sortedLevels(f(z,*pav,**kwv))
 
 def contourmethod(id=None,name=None,description=None):
     def mf2( f ):
@@ -158,7 +166,7 @@ def calcLogContours( z, ncontour, min=None, max=None, mantissa=[1,2,5] ):
             levels=levels[:ncontour]
         else:
             levels=levels[-ncontour:]
-    return levels
+    return _levels
 
 @contourmethod('interval','Fixed contour interval')
 def calcIntervalContours( z, interval, offset=0.0,min=None, max=None, maxcontours=50):

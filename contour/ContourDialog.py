@@ -234,12 +234,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.uMaxContour.setValue(np.max(z))
             self.showLevels()
 
-    def _getOptionalFloat( self, properties, name ):
+    def _getOptionalValue( self, properties, name, typefunc ):
         fval=properties.get(name,'')
-        if fval == '':
-            return  None
-        else:
-            return float(fval)
+        if fval != '':
+            try:
+                return typefunc(fval)
+            except:
+                pass
+        return None
 
     def setupCurrentLayer( self, layer ):
         if not layer:
@@ -288,20 +290,22 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             if ramp:
                 self.uColorRamp.setColorRamp(ramp)
             self.uReverseRamp.setChecked( properties.get('ReverseRamp') == 'yes' )
-            fval=self._getOptionalFloat(properties,'MinContour')
+            fval=self._getOptionalValue(properties,'MinContour',float)
             self.uSetMinimum.setChecked( fval is not None )
             if fval is not None:
                 self.uMinContour.setValue(fval)
-            fval=self._getOptionalFloat(properties,'MaxContour')
+            fval=self._getOptionalValue(properties,'MaxContour',float)
             self.uSetMaximum.setChecked( fval is not None )
             if fval is not None:
                 self.uMaxContour.setValue(fval)
             levels = properties.get('Levels').split(';')
-            self.uNContour.setValue(len(levels))
+            ival=self.getOptionalValue(properties,'NContour',int)
+            if ival is not None:
+                self.uNContour.setValue(ival)
             self.uLevelsList.clear()
             for level in levels:
                 self.uLevelsList.addItem(level)
-            fval=self._getOptionalFloat(properties,'Interval')
+            fval=self._getOptionalValue(properties,'Interval',float)
             if fval is not None:
                 self.uContourInterval.setValue(fval)
         finally:
@@ -644,6 +648,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             'LabelPrecision' : str(self.uPrecision.value()),
             'TrimZeroes' : 'yes' if self.uTrimZeroes.isChecked() else 'no',
             'LabelUnits' : str(self.uLabelUnits.text()),
+            'NContour' : str(self.uNContour.value()),
             'MinContour' : str(self.uMinContour.value()) if self.uSetMinimum.isChecked() else '',
             'MaxContour' : str(self.uMaxContour.value()) if self.uSetMaximum.isChecked() else '',
             'Extend' : self.uExtend.itemData(self.uExtend.currentIndex()),
@@ -853,11 +858,19 @@ class ContourDialog(QDialog, Ui_ContourDialog):
               BOTH if self.uBoth.isChecked() else
               FILLED if self.uFilledContours.isChecked() else
               LINES)
+        list=self.uLevelsList
+        values=' '.join([list.item(i).text() for i in range(0, list.count())])
         settings.setValue(base+'mode',mode)
         settings.setValue(base+'levels',str(self.uNContour.value()))
+        settings.setValue(base+'values',values)
+        settings.setValue(base+'interval',str(self.uContourInterval.value()))
         settings.setValue(base+'extend',self.uExtend.itemData(self.uExtend.currentIndex()))
         settings.setValue(base+'method',self.uMethod.itemData(self.uMethod.currentIndex()))
         settings.setValue(base+'precision',str(self.uPrecision.value()))
+        settings.setValue(base+'setmin','yes' if self.uSetMinimum.isChecked() else 'no')
+        settings.setValue(base+'minval',str(self.uMinContour.value()))
+        settings.setValue(base+'setmax','yes' if self.uSetMaximum.isChecked() else 'no')
+        settings.setValue(base+'maxval',str(self.uMaxContour.value()))
         settings.setValue(base+'trimZeroes','yes' if self.uTrimZeroes.isChecked() else 'no')
         settings.setValue(base+'units',self.uLabelUnits.text())
         settings.setValue(base+'applyColors','yes' if self.uApplyColors.isChecked() else 'no')
@@ -881,6 +894,30 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             levels=settings.value(base+'levels')
             if levels is not None and levels.isdigit():
                 self.uNContour.setValue(int(levels))
+
+            values=settings.value(base+'values')
+            if values is not None:
+                self.uLevelsList.clear()
+                for value in values.split():
+                    self.uLevelsList.addItem(value)
+
+            setmin=settings.value(base+'setmin') == 'yes'
+            self.uSetMinimum.setChecked(setmin)
+            if setmin:
+                try:
+                    value=settings.value(base+'minval')
+                    self.uMinContour.setValue(float(value))
+                except:
+                    pass
+
+            setmax=settings.value(base+'setmax') == 'yes'
+            self.uSetMaximum.setChecked(setmax)
+            if setmax:
+                try:
+                    value=settings.value(base+'maxval')
+                    self.uMaxContour.setValue(float(value))
+                except:
+                    pass
 
             extend=settings.value(base+'extend')
             index = self.uExtend.findData(extend)

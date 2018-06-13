@@ -46,7 +46,11 @@ class ContourError( RuntimeError ):
         return self.args[0] if len(args)  > 1 else "Exception"
 
 class ContourGenerationError( ContourError ):
-    pass
+
+    @staticmethod
+    def fromException( excinfo ):
+        message=traceback.format_exception_only(excinfo[0],excinfo[1])
+        return ContourGenerationError(message)
 
 class ContourExtendOption:
 
@@ -157,6 +161,7 @@ class ContourGenerator( QObject ):
         self._dataLoaded = False
         self._gridTested = False
         self._gridShape = None
+        self._gridOrder = None
         self._useGrid = True
         self._contourMethod = None
         self._contourMethodParams = None
@@ -164,6 +169,7 @@ class ContourGenerator( QObject ):
         self._contourType = ContourType.line
         self._extendFilled = ContourExtendOption.both
         self._labelNdp = -1
+        self._defaultLabelNdp = None
         self._labelTrimZeros = False
         self._labelUnits = ''
         self._feedback = feedback or _DummyFeedback()
@@ -338,7 +344,7 @@ class ContourGenerator( QObject ):
         """
         if not self._gridTested:
             x,y,z=self.data()
-            self._gridShape,self.gridOrder=DataGridder(x,y).calcGrid()
+            self._gridShape,self._gridOrder=DataGridder(x,y).calcGrid()
             self._gridTested=True
         return self._gridShape is not None
 
@@ -355,6 +361,7 @@ class ContourGenerator( QObject ):
             if method is None:
                 raise ContourError(tr("Contouring method not defined"))
             self._levels=ContourMethod.calculateLevels(z,method,**params)
+            self._defaultLabelNdp = None
         return self._levels
 
     def crs( self ):
@@ -396,11 +403,16 @@ class ContourGenerator( QObject ):
             return []
 
     def gridContourData(self):
-        x,y,z=self.data()
+        gx,gy,gz=self.data()
+        order=self._gridOrder
         shape=self._gridShape
-        gx=x.reshape(shape)
-        gy=y.reshape(shape)
-        gz=z.reshape(shape)
+        if order is not None:
+            gx=gx[order]
+            gy=gy[order]
+            gz=gz[order]
+        gx=gx.reshape(shape)
+        gy=gy.reshape(shape)
+        gz=gz.reshape(shape)
         self._feedback.pushInfo("Contouring {0} by {1} grid"
             .format(shape[0],shape[1]))
         return gx, gy, gz
@@ -454,10 +466,23 @@ class ContourGenerator( QObject ):
         return polygons
 
     def calcLabelNdp( self ):
-        # NOTE: Real intention of ndp < 0 is to automatically calculate a
-        # precision appropriate to the contour levels/increment.  Note this
-        # should be cached otherwise will be calculated for every label...
-        return self._labelNdp
+        if self._labelNdp is not None and self._labelNdp > 0:
+            return self._labelNdp
+        if self._defaultLabelNdp is None:
+            levels=self.levels()
+            ldiff=levels[1:]-levels[:-1]
+            try:
+                ldmin=np.min(ldiff[ldiff > 0.0])
+                # Allow 2dp on minimum increment
+                ldmin /= 100
+                ndp=0
+                while ndp < 10 and ldmin < 1.0:
+                    ndp += 1
+                    ldmin *= 10.0
+            except:
+                ndp=4 # Arbitrary!
+            self._defaultLabelNdp = ndp
+        return self._defaultLabelNdp
 
     def formatLevel( self, level ):
         ndp=self.calcLabelNdp()
@@ -484,8 +509,7 @@ class ContourGenerator( QObject ):
                 trig,z=trigContourData()
                 cs = tricontour(trig, z, levels )
         except:
-            raise ContourGenerationError(
-                traceback.format_exception_only(*sys.exc_info()))
+            raise ContourGenerationError.fromException(sys.exc_info())
 
         fields = self.fields()
         zfield=self._zFieldName
@@ -550,7 +574,6 @@ class ContourGenerator( QObject ):
 
     def filledContourFeatures(self ):
         levels = self.levels()
-        x, y, z = self.data()
         extend=self._extendFilled
         usegrid=self.isGridded() and self._useGrid
         try:
@@ -561,8 +584,7 @@ class ContourGenerator( QObject ):
                 trig,z=self.trigContourData()
                 cs = tricontourf(trig, z, levels, extend=extend)
         except:
-            raise ContourGenerationError(
-                traceback.format_exception_only(*sys.exc_info()))
+            raise ContourGenerationError.fromException(sys.exc_info())
 
         levels = [float(l) for l in cs.levels]
         if ContourExtendOption.extendBelow(extend):
@@ -605,7 +627,6 @@ class ContourGenerator( QObject ):
 
     def layerContourFeatures(self):
         levels = self.levels()
-        x, y, z = self.data()
         usegrid=self.isGridded() and self._useGrid
         try:
             if usegrid:
@@ -613,8 +634,7 @@ class ContourGenerator( QObject ):
             else:
                 trig,z=self.trigContourData()
         except:
-            raise ContourGenerationError(
-                    traceback.format_exception_only(*sys.exc_info()))
+            raise ContourGenerationError.fromException(sys.exc_info())
 
         fields = self.fields()
         ninvalid=0
@@ -628,8 +648,7 @@ class ContourGenerator( QObject ):
                 else:
                     cs = tricontourf(trig, z, [level], extend=ContourExtendOption.below)
             except:
-                raise ContourGenerationError(
-                    traceback.format_exception_only(*sys.exc_info()))
+                raise ContourGenerationError.fromException(sys.exc_info())
             if len(cs.collections) < 1:
                 continue
             polygon=cs.collections[0]

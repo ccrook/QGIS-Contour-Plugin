@@ -34,6 +34,10 @@ for l in test.split('\n'):
 x=np.array(x)
 y=np.array(y)
 
-import pdb; pdb.set_trace()
+#import pdb; pdb.set_trace()
 g=DataGridder.DataGridder(x,y)
-print(g.calcGrid())
+shape,order=g.calcGrid()
+print(shape,order)
+gx=x[order].reshape(shape)
+gy=y[order].reshape(shape)
+gz=z[order].reshape(shape)
