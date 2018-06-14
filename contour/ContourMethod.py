@@ -6,8 +6,8 @@ from collections import namedtuple
 # Need to use QObject.tr on method name, description
 
 class ContourMethodError( RuntimeError ):
-    def message():
-        return self.args[0] if len(args)  > 1 else "Exception"
+    def message(self):
+        return self.args[0] if len(self.args)  > 1 else "Exception"
 
 ContourMethod=namedtuple('ContourMethod','id name calc required optional description')
 
@@ -166,7 +166,7 @@ def calcLogContours( z, ncontour, min=None, max=None, mantissa=[1,2,5] ):
             levels=levels[:ncontour]
         else:
             levels=levels[-ncontour:]
-    return _levels
+    return levels
 
 @contourmethod('interval','Fixed contour interval')
 def calcIntervalContours( z, interval, offset=0.0,min=None, max=None, maxcontours=50):

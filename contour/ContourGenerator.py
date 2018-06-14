@@ -42,8 +42,8 @@ def tr(string):
 
 class ContourError( RuntimeError ):
 
-    def message():
-        return self.args[0] if len(args)  > 1 else "Exception"
+    def message(self):
+        return self.args[0] if len(self.args)  > 1 else "Exception"
 
 class ContourGenerationError( ContourError ):
 
@@ -632,7 +632,7 @@ class ContourGenerator( QObject ):
             if usegrid:
                 gx,gy,gz=self.gridContourData()
             else:
-                trig,z=self.trigContourData()
+                trig,gz=self.trigContourData()
         except:
             raise ContourGenerationError.fromException(sys.exc_info())
 
@@ -640,13 +640,18 @@ class ContourGenerator( QObject ):
         ninvalid=0
         dx,dy=self._origin
         zfield=self._zFieldName
+        zmax=np.max(gz)
+        zmax += (1.0+abs(zmax))
+        zmin = np.min(gz)
 
         for i,level in enumerate(levels):
+            if level <= zmin:
+                continue
             try:
                 if usegrid:
-                    cs = contourf(gx, gy, gz, [level], extend=ContourExtendOption.below)
+                    cs = contourf(gx, gy, gz, [level,zmax], extend=ContourExtendOption.neither)
                 else:
-                    cs = tricontourf(trig, z, [level], extend=ContourExtendOption.below)
+                    cs = tricontourf(trig, gz, [level,zmax], extend=ContourExtendOption.neither)
             except:
                 raise ContourGenerationError.fromException(sys.exc_info())
             if len(cs.collections) < 1:

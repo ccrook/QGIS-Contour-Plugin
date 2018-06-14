@@ -299,7 +299,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             if fval is not None:
                 self.uMaxContour.setValue(fval)
             levels = properties.get('Levels').split(';')
-            ival=self.getOptionalValue(properties,'NContour',int)
+            ival=self._getOptionalValue(properties,'NContour',int)
             if ival is not None:
                 self.uNContour.setValue(ival)
             self.uLevelsList.clear()
