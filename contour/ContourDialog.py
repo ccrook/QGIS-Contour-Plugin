@@ -55,6 +55,9 @@ FILLED='filled'
 BOTH='both'
 LAYERS='layer'
 
+def tr(string):
+    return QCoreApplication.translate('Processing', string)
+
 class ContourDialogPlugin:
 
     def __init__(self, iface):
@@ -62,14 +65,14 @@ class ContourDialogPlugin:
 
     def initGui(self):
         if not mplAvailable:
-            QMessageBox.warning(self._iface.mainWindow(), "Contour error",
-                "The contour plugin is disabled as it requires python modules"
-                " numpy and matplotlib which are not both installed")
+            QMessageBox.warning(self._iface.mainWindow(), tr("Contour error"),
+                tr("The contour plugin is disabled as it requires python modules"
+                " numpy and matplotlib which are not both installed"))
             return
 
         self.action = QAction(QIcon(":/plugins/contour/contour.png"), \
         "Contour", self._iface.mainWindow())
-        self.action.setWhatsThis("Generate contours based on point vector data")
+        self.action.setWhatsThis(tr("Generate contours based on point vector data"))
         self.action.triggered.connect(self.run)
         self._iface.addToolBarIcon(self.action)
         self._iface.vectorMenu().addAction(self.action)
@@ -87,7 +90,7 @@ class ContourDialogPlugin:
             dlg = ContourDialog(self._iface)
             dlg.exec_()
         except ContourError:
-            QMessageBox.warning(self._iface.mainWindow(), "Contour error",
+            QMessageBox.warning(self._iface.mainWindow(), tr("Contour error"),
                 str(sys.exc_info()[1]))
 
 ###########################################################
@@ -104,8 +107,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
     class Feedback:
 
-        def __init__( self, iface, progress ):
-            self._iface=iface
+        def __init__( self, messagebar, progress ):
+            self._messageBar=messagebar
             self._progress=progress
 
         def isCanceled( self ):
@@ -116,10 +119,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 self._progress.setValue(percent)
 
         def pushInfo( self, info ):
-            self._iface.messageBar().pushInfo('',info)
+            self._messageBar.pushInfo('',info)
 
         def reportError( self, message, fatal=False ):
-            self._iface.messageBar().pushWarning('Error' if fatal else 'Warning',message)
+            self._messageBar.pushWarning(tr('Error') if fatal else tr('Warning'),message)
 
     def __init__(self, iface):
         QDialog.__init__(self)
@@ -143,7 +146,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uSelectedOnly.setEnabled(False)
         self.uUseGrid.setEnabled(False)
         self.uSourceLayer.setFilters(QgsMapLayerProxyModel.PointLayer)
-        self.uDataField.setExpressionDialogTitle("Value to contour")
+        self.uDataField.setExpressionDialogTitle(tr("Value to contour"))
         self.uDataField.setFilters(QgsFieldProxyModel.Numeric)
         self.uNContour.setMinimum(2)
         self.uNContour.setValue(10)
@@ -160,7 +163,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         for option in ContourExtendOption.options():
             self.uExtend.addItem(ContourExtendOption.description(option),option)
 
-        self._feedback=ContourDialog.Feedback(iface,self.progressBar)
+        self._feedback=ContourDialog.Feedback(self.uMessageBar,self.progressBar)
         self._generator=ContourGenerator(feedback=self._feedback)
 
         self.loadSettings()
@@ -197,7 +200,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
         # populate layer list
         if self.uSourceLayer.count() <= 0:
-            raise ContourError("There are no point geometry layers suitable for contouring.")
+            raise ContourError(tr("There are no point geometry layers suitable for contouring"))
         self.setupCurrentLayer( mapCanvas.currentLayer() )
         if self.uSourceLayer.currentIndex() < 0 and self.uSourceLayer.count()==1:
             self.uSourceLayer.setCurrentIndex(0)
@@ -205,13 +208,13 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         
         # Is MPL version Ok?
         if self._isMPLOk() == False:
-            self.warnUser("You are using an old version matplotlib - only gridded data is supported")
+            self.warnUser(tr("You are using an old version matplotlib - only gridded data is supported"))
 
     def warnUser(self,message):
-        self._iface.messageBar().pushMessage(message, QgsMessageBar.WARNING)
+        self._feedback.reportError(message)
 
     def adviseUser(self,message):
-        self._iface.messageBar().pushMessage(message, QgsMessageBar.INFO,5)
+        self._feedback.pushInfo(message)
 
     def closeDialog(self):
         self.saveSettings()
@@ -362,7 +365,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     ndp2 += 1
                 if ndp2 != ndp:
                     self.uPrecision.setValue(ndp2)
-                    self.adviseUser("Resetting the label precision to match range of data values")
+                    self.adviseUser(tr("Resetting the label precision to match range of data values"))
             if not self.uSetMinimum.isChecked():
                 self.uMinContour.setValue(zmin)
             if not self.uSetMaximum.isChecked():
@@ -371,14 +374,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.uUseGrid.setEnabled(gridded)
             self.uUseGrid.setChecked(gridded)
             self.uUseGridLabel.setEnabled(gridded)
-            description='Contouring {0} points'.format(len(z))
+            description=tr('Contouring {0} points').format(len(z))
             if gridshape is not None:
-                description=description+' in a {0} x {1} grid'.format(*gridshape)
+                description=description+tr(' in a {0} x {1} grid').format(*gridshape)
             else:
-                description=description+' (not in regular grid)'
+                description=description+' ('+tr('not in regular grid')+')'
             self.uLayerDescription.setText(description)
         else:
-            self.uLayerDescription.setText("No data selected for contouring")
+            self.uLayerDescription.setText(tr("No data selected for contouring"))
 
     def reloadData(self):
         if self._loadingLayer:
@@ -415,9 +418,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             val=' '.join([list.item(i).text() for i in range(0, list.count())])
         else:
             val = item.text()
-        newval, ok = QInputDialog.getText(self, "Update level", 
-                         "Enter a single level to replace this one,\n"+
-                         "or a space separated list of levels to replace all",
+        newval, ok = QInputDialog.getText(self, tr("Update level"), 
+                         tr("Enter a single level to replace this one")+"\n"+
+                         tr("or a space separated list of levels to replace all"),
                          QLineEdit.Normal,
                          val)
         if ok:
@@ -427,8 +430,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 try:
                     fval.append(float(v))
                 except:
-                    QMessageBox.warning(self._iface.mainWindow(), "Contour error",
-                                        "Invalid contour value "+v)
+                    QMessageBox.warning(self._iface.mainWindow(), tr("Contour error"),
+                                        tr("Invalid contour value {0}").format(v))
                     return
             if len(values) < 1:
                 return
@@ -539,12 +542,12 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             pass
 
     def confirmReplaceSet(self,set):
-        message = "The following layers already have contours of " + self._zField + "\n"
-        message = message + "Do you want to replace them with the new contours?\n\n"
+        message = (tr("The following layers already have contours of {0}").format(self._zField) + "\n"
+                    + tr("Do you want to replace them with the new contours?")+"\n\n")
 
         for layer in list(set.values()):
             message = message + "\n   " + layer.name()
-        return QMessageBox.question(self,"Replace contour layers",message,
+        return QMessageBox.question(self,tr("Replace contour layers"),message,
                              QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Cancel)
 
     def addContours(self):
@@ -578,9 +581,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 QApplication.restoreOverrideCursor()
 
         except ContourGenerationError as cge:
-            self.warnUser("Exception encountered: " + str(cge) +" (Try thinning points)")
+            self.warnUser(tr("Exception encountered: ") + str(cge) +" "+tr("(Try discarding duplicate points)"))
         except ContourError as ce:
-            self.warnUser("Error calculating grid/contours: "+str(ce))
+            self.warnUser(tr("Error calculating grid/contours: {0}").format(ce))
         # self.uAddButton.setEnabled(False)
 
     def showHelp(self):
@@ -592,9 +595,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def validate(self):
         message = None
         if self.uSourceLayer.currentLayer() is None:
-            message = "Please specify vector layer"
+            message = tr("Please specify vector layer")
         if (self.uDataField.currentText() == ""):
-            message = "Please specify data field"
+            message = tr("Please specify data field")
         if message != None:
             raise ContourError(message)
 
@@ -631,7 +634,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             layer = QgsVectorLayer(url, name, "memory")
 
         if layer is None:
-            raise ContourError("Could not create layer for contours")
+            raise ContourError(tr("Could not create layer for contours"))
 
         pr = layer.dataProvider()
         pr.addAttributes( fields )
@@ -765,6 +768,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         rendtype='line' if ctype == ContourType.line else 'polygon'
         self.applyRenderer(vl,rendtype,levels)
         self.addLayer(vl)
+        self.adviseUser(tr("Contour layer {0} created").format(vl.name()))
 
     def dataChanged( self ):
         x,y,z=self._generator.data()
@@ -778,7 +782,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                     ndp2 += 1
                 if ndp2 != ndp:
                     self.uPrecision.setValue(ndp2)
-                    self.adviseUser("Resetting the label precision to match range of data values")
+                    self.adviseUser(tr("Resetting the label precision to match range of data values"))
             if not self.uSetMinimum.isChecked():
                 self.uMinContour.setValue(zmin)
             if not self.uSetMaximum.isChecked():
@@ -795,7 +799,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 description=description+' (not in regular grid)'
             self.uLayerDescription.setText(description)
         else:
-            self.uLayerDescription.setText("No data selected for contouring")
+            self.uLayerDescription.setText(tr("No data selected for contouring"))
 
     def setLabelFormat( self ):
         ndp=self.uPrecision.value()

@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>705</height>
+    <height>739</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,13 +19,13 @@
   <property name="sizeGripEnabled">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,1,0,0">
-   <item row="0" column="0" colspan="4">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0,0">
+   <item>
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Input</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0" rowminimumheight="0,0,0,0,0">
+     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0">
       <item row="0" column="0">
        <layout class="QFormLayout" name="formLayout_2">
         <property name="topMargin">
@@ -170,7 +170,7 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="4">
+   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Contouring</string>
@@ -332,19 +332,6 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="2" rowspan="8">
-       <widget class="QListWidget" name="uLevelsList">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="C" country="AnyCountry"/>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QLabel" name="label_7">
         <property name="text">
@@ -446,23 +433,23 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="2" rowspan="10">
+       <widget class="QListWidget" name="uLevelsList">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="locale">
+         <locale language="C" country="AnyCountry"/>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QProgressBar" name="progressBar">
-     <property name="value">
-      <number>0</number>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="textVisible">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="4">
+   <item>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
       <string>Output</string>
@@ -623,29 +610,65 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="3">
-    <widget class="QPushButton" name="uCloseButton">
-     <property name="text">
-      <string>Close</string>
+   <item>
+    <widget class="QgsMessageBar" name="uMessageBar" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>27</height>
+      </size>
      </property>
     </widget>
    </item>
-   <item row="3" column="1">
-    <widget class="QPushButton" name="uHelpButton">
-     <property name="text">
-      <string>Help</string>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <property name="topMargin">
+      <number>0</number>
      </property>
-     <property name="autoDefault">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="2">
-    <widget class="QPushButton" name="uAddButton">
-     <property name="text">
-      <string>Add</string>
-     </property>
-    </widget>
+     <item>
+      <widget class="QProgressBar" name="progressBar">
+       <property name="value">
+        <number>0</number>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="textVisible">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="uHelpButton">
+       <property name="text">
+        <string>Help</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="uAddButton">
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="uCloseButton">
+       <property name="text">
+        <string>Close</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -664,6 +687,12 @@
    <class>QgsColorRampButton</class>
    <extends>QToolButton</extends>
    <header>qgis.gui.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsMessageBar</class>
+   <extends>QWidget</extends>
+   <header>qgsmessagebar.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>
