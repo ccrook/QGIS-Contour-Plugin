@@ -479,6 +479,12 @@ class ContourGenerator( QObject ):
                 while ndp < 10 and ldmin < 1.0:
                     ndp += 1
                     ldmin *= 10.0
+                while ndp > 0:
+                    factor=10**ndp
+                    diff=np.max(np.abs(levels*factor-np.round(levels*factor)))
+                    if diff > 0.5:
+                        break
+                    ndp -= 1
             except:
                 ndp=4 # Arbitrary!
             self._defaultLabelNdp = ndp

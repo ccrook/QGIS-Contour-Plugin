@@ -282,9 +282,9 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             }   
 
         generator=ContourGenerator(source,field,feedback)
-        generator.setpDiscardTolerance( discardTolerance )
+        generator.setDiscardTolerance( discardTolerance )
         generator.setContourMethod( method, params )
-        generator.setpContourType( contourtype )
+        generator.setContourType( contourtype )
         generator.setContourExtendOption( extend )
         generator.setLabelFormat( labelndp, labeltrim, labelunits )
 

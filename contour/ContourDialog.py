@@ -522,6 +522,16 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uLevelsList.clear()
         try:
             levels=self._generator.levels()
+            # Need to create some contours if manual and none
+            # defined
+            if self._canEditList and len(levels) == 0:
+                x,y,z=self._generator.data()
+                if z is not None:
+                    ncontour=self.uNContour.value()
+                    try:
+                        levels=ContourMethod.calculateLevels(z,'equal',ncontour=ncontour)
+                    except:
+                        levels=[0.0]
         except (ContourMethodError,ContourError) as ex:
             self._feedback.pushInfo(ex.message())
             return
