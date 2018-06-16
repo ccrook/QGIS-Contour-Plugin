@@ -76,7 +76,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
     PrmLabelDecimalPlaces = 'LabelDecimalPlaces'
     PrmLabelTrimZeros = 'LabelTrimZeros'
     PrmLabelUnits = 'LabelUnits'
-    PrmDiscardTolerance = 'DiscardTolerance'
+    PrmDuplicatePointTolerance = 'DuplicatePointTolerance'
 
     ContourTypeValues=ContourType.types()
     ContourTypeOptions=[ContourType.description(t) for t in ContourTypeValues]
@@ -116,8 +116,8 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(
             QgsProcessingParameterNumber(
-                self.PrmDiscardTolerance,
-                tr('Discard duplicate point radius'),
+                self.PrmDuplicatePointTolerance,
+                tr('Duplicate point tolerance'),
                 QgsProcessingParameterNumber.Double,
                 minValue=0.0,
                 defaultValue=0.0
@@ -188,7 +188,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(
             QgsProcessingParameterString(
                 self.PrmContourLevels,
-                tr('Contour levels'),
+                tr('User specified contour levels'),
                 multiLine=True,
                 optional=True
                 ))
@@ -244,7 +244,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         
         source = self.parameterAsSource(parameters, self.PrmInputLayer, context)
         field = self.parameterAsExpression( parameters, self.PrmInputField, context )
-        discardTolerance = self.parameterAsDouble( parameters, self.PrmDiscardTolerance, context )
+        DuplicatePointTolerance = self.parameterAsDouble( parameters, self.PrmDuplicatePointTolerance, context )
         
         methodid = self.parameterAsEnum( parameters, self.PrmContourMethod, context)
         ncontour = self.parameterAsInt( parameters, self.PrmNContour, context )
@@ -282,7 +282,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             }   
 
         generator=ContourGenerator(source,field,feedback)
-        generator.setDiscardTolerance( discardTolerance )
+        generator.setDuplicatePointTolerance( DuplicatePointTolerance )
         generator.setContourMethod( method, params )
         generator.setContourType( contourtype )
         generator.setContourExtendOption( extend )
@@ -314,13 +314,23 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         return 'generatecontours`'
 
     def helpUrl(self):
-        helpfile=os.path.splitext(os.path.realpath(__file__))[0]+'.html'
-        if not os.path.exists(helpfile):
+        file=os.path.realpath(__file__)
+        file = os.path.join(os.path.dirname(file),'doc','ContourGenerator_algorithm.html')
+        if not os.path.exists(file):
             return ''
-        return QUrl.fromLocalFile(helpfile).toString(QUrl.FullyEncoded)
+        return QUrl.fromLocalFile(file).toString(QUrl.FullyEncoded)
 
     def displayName(self):
         return tr('Generate Contours')
+
+    def shortHelpString(self):
+        file=os.path.realpath(__file__)
+        file = os.path.join(os.path.dirname(file),'ContourGenerator_algorithm.help')
+        if not os.path.exists(file):
+            return ''
+        with open(file) as helpf:
+            help=helpf.read()
+        return help
 
     def group(self):
         return tr('Contouring')

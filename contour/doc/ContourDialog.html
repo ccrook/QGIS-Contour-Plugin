@@ -1,0 +1,141 @@
+<html>
+    <head><title>Contour plugin help</title></head>
+    <style type="text/css">
+        body { font-family: verdana, arial, sans-serif;
+            font-size: 80%;
+                    background-color: #ffffff;  }
+        h1 { font-size: 120%; }
+        h2 { font-size: 100%; }
+        h3 { font-size: 90%; font-style: italic }
+        h4 { font-size: 85%; font-style: italic; margin-left: 2em }
+        p.quote { margin: 0,3em,0,3em; font-style: italic;}
+        div.indent { margin-left: 3em; }
+    </style>
+    <body>
+    <h1>Contour plugin help</h1>
+    <img src="../contour.png" alt="Button image" style="float:right"/>
+    <p>This plugin generates contours for data values at points in a point vector layer.  The contour are created in a new layer that can be either a line layer, for contour lines, or a polygon layer, for filled contours.  The plugin uses contouring algorithms from the matplotlib library and can contour either gridded or randomly located data.  For non-gridded data the contouring is based on a Delauney triangulation of the data points. . </p>
+    <p>The plugin requires the python libraries <a href="http://www.numpy.org">numpy</a> and
+    <a href="https://matplotlib.org">matplotlib</a> python libaries to be installed.</p>
+    <p>The contouring function can be used either from a dialog box in which settings are entered interactively, or from a <a href="ContourGenerator_algorithm.html">processing module</a>.  The processing module can be built into user's processing scripts, or called from python scripts.</p>
+
+       <h2>Using the contour dialog</h2>
+       <img src="images/contour_dialog.png" alt="Contour dialog" style="float:right; padding-left: 2em"/>
+       <p>
+       The contour dialog is accessed from the contour button installed into the QGIS vector menu or on the contour menu bar.</p>
+       <p>The dialog is organised into three sections
+       <ul>
+           <li>Input - selecting the data to contour</li>
+           <li>Contouring - calculating the values at which to create contours</li>
+           <li>Output - setting attributes of the output contour layer</li>
+       </ul>
+       <p>The contour layer is generated using the <span class="button">Add</span> button.  
+       Once all the required contour layers have been built the <span class="button">Close</span>
+       button is used to close the dialog box.
+       </p>
+       If a generated contour layer is the active layer when the dialog is opened then the original settings will be reloaded so that the settings can be edited if necessary and the layer regenerated.
+       </p>
+       <h3>Input data selection</h3>
+       <p>
+       The data to be contoured are selected by picking a vector layer of point features and a 
+       numeric data value at each point.  The data value can be either the value of an attribute of 
+       the layer value, or an expression calculated from field values.  
+       </p>
+       <p>
+       The data set can be restricted to just a selected subset of the layer if required.  The 
+       points to be used must be selected before opening the contour dialog.
+       </p>
+       <p>
+       The contouring plugin can use two different methods for contouring.  Gridded data can be contoured 
+       more efficiently than irregular data, so once the data has been selected the plugin checks 
+       to see if it is organised as a grid, and if so uses grid based contouring by default.  However
+       this can be overridden by the user if required.  Otherwise the contouring is derive by 
+       first building a Delauney triangulation across the data points, and then contouring 
+       across each triangle.  
+       </p>
+       <p>If the data set contains colocated points or points very close together then the 
+       triangulation algorithm may fail to run.  In this case there is an option to remove duplicate 
+       points.  Note that this uses a very simplistic algorithm, simply discarding points that are 
+       near to other points, so some information may be lost if this option is selected.  
+       Duplicate points are identified by specifying a tolerance such that if a group of points 
+       are closer together than this distance then all but one will be discarded.  Setting the value 
+       to zero means that no points are discarded. The tolerance is in metres.
+       </p>
+       <p>
+       The input box is used to select the data to be contoured.  This requires choosing
+       the map layer containing the data (only point layers are available), and the data field of the layer containing the values to be contoured.
+       </p>
+       <h3>Contouring - contour type and levels</h3>
+       <p>
+       Contours can be represented either as line features along the contour levels, or as
+       filled polygon features defining the area between each contour level and the next, or as 
+       layer polygons defining the area above the contour level. As a convenience contour lines
+       and filled polygons can be generated at the same time.
+       </p>
+       <h4>Method</h4>
+       <p>The method defines how the contour levels are calculated.  Each method may use a number 
+       of the parameters interval, number, minimum, and maximum.
+       </p>
+       <p>The methods available are:
+       <ul>
+           <li><i>N equal intervals</i>: chooses equally spaced levels beteen the minimum and maximum vlaues.  The number of intervals is specified in the number column.</li>
+           <li><i>N quantiles</i>: uses the distribution of data values between the minimum and
+               maximum values to select quantiles, so that there are approximately equal numbers of
+               data points in each contour interval.</li>
+           <li><i>Logarithmic intervals</i>: Creates up to a maximum number of logarithmically spaced
+               values.  These will be 1, 2, and 5 times powers of ten.  If the data spans more than
+               the maximum number of values then the values actually used will depend on whether a 
+               minimum or maximum values is explicitly set</li>
+           <li><i>Fixed contour intervals</i>: The contours will be calculated as multiples of the 
+               contour interval.</li>
+           <li><i>User selected contour levels</i>: The contour levels are entered manually</li>
+       </ul>
+       </p>
+       <h4>Parameters</h4>
+       <p>The parameters that can be set depend on the contouring method.  The parameters that can
+       be selected are:
+       <ul>
+           <li><i>Interval</i>: the interval between contours used in the fixed contour intervals method</li>
+           <li><i>Number</i>: the number of intervals or quantiles to calulate, or for the logarithmic method and fixed contour interval methods the maximum number of contour levels to calculate</li>
+           <li><i>Minimum</i> and <i>Maximum</i>: if set override the default values for the minimum and maximum contour levels, which are based on the minimum and maximum data values.</li>
+       </ul>
+       </p>
+       <h4>Entering user selected contours</h4>
+       <img src="images/contour_levels_dialog.png" alt="Contour levels dialog" style="float:right; padding-left: 2em"/>
+       <p>If the <i>user selected contour levels</i> method is used then the contour values are 
+       entered by clicking on the contour levels to the right of the parameters.  This will open
+       a dialog box in which either a single level can be entered, to replace the value clicked, or
+       a set of levels separated by spaces, in which case the values replace the complete set of 
+       contour levels.
+       </p>
+       <h4>The extend options</h4>
+       <p>The extend option is used for filled contours. These are generated as polygons within which
+       the values lies between two contour levels.  Optionally the plugin can also generate polygons 
+       for the area where the data is less than the minimum contour level or greater than 
+       the maximum contour level.  The extend option is used to choose which of these are created.
+       </p>
+       <h3>Output layer attributes</h3>
+       <p>
+       The default output layer name is generated based on the input layer and the name of the field 
+       or expression defining the data values. However this can be changed to whatever is required 
+       in the dialog box.
+       <p>
+       The layer has attributes based on the contour level (or levels for filled contour), 
+       including a &quot;label&quot; attribute that can be used for labelling the features.  
+       The options for formatting the label are:
+       <ul>
+           <li><i>Label precision</i> the number of decimal places used to represent data values</li>
+           <li><i>Trim zeroes</i> is used to trim trailing zeroes from contour levels.  For example
+               if the level is 1.2003, and the precision is 2, then this becomes 1.20.  If the 
+               trim zeroes option is selected this will become 1.2</li>
+           <li><i>Units</i> is a string appended to the data values in the label. For example it could be &quot;metres above sea level&quot;</li>
+        </ul>
+        <p>
+        The plugin can render the layer using a categorized renderer using a different colour for 
+        each contour level.  This is particularly useful for displaying filled contours.  This is
+        set using the <i>Apply colours</i> option.  The colours are selected from a colour ramp 
+        which may be reversed if required.</i>
+       </p>
+    </body>
+
+</html>

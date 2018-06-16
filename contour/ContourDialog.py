@@ -591,16 +591,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 QApplication.restoreOverrideCursor()
 
         except ContourGenerationError as cge:
-            self.warnUser(tr("Exception encountered: ") + str(cge) +" "+tr("(Try discarding duplicate points)"))
+            self.warnUser(tr("Exception encountered: ") + str(cge) +" "+tr("(Try removing duplicate points)"))
         except ContourError as ce:
             self.warnUser(tr("Error calculating grid/contours: {0}").format(ce))
         # self.uAddButton.setEnabled(False)
 
     def showHelp(self):
-        file = inspect.getsourcefile(ContourDialog)
-        file = 'file://' + os.path.join(os.path.dirname(file),'ContourDialog.html')
-        file = file.replace("\\","/")
-        QDesktopServices.openUrl(QUrl(file))
+        file = os.path.realpath(__file__)
+        file = os.path.join(os.path.dirname(file),'doc','ContourDialog.html')
+        QDesktopServices.openUrl(QUrl.fromLocalFile(file))
 
     def validate(self):
         message = None

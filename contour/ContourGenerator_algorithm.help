@@ -1,0 +1,39 @@
+The Generate Contours algorithm creates a layer of contour lines, filled contour polygons, or contour layer polygons representing contours of data values at a set of data points.  The parameters are as follows:
+
+Input point layer: The source of data points to contour
+
+Value to contour: A field or expression defining the data value at each point
+
+Duplicate point tolerance: If greater than zero then where points are closer than this to each other only one of the points will be used
+
+Contour type: The type of layer to create.  Can be contour lines, filled contour polygons each representing the area where the data lies between two contour levels, or layer polygons representing the area where the data is greater than the contour level
+
+Filled contour options: If creating filled contours then select whether to create polygons where the data is less than the minimum contour level and/or greater than the maximum contour level
+
+Method used to calculate the contour levels: The contour levels can be calculated from the data values using one of a number of possible algorithms.  Options are:
+
+* N equal intervals: the range from the minimum to the maximum data value is divided into the specified number of equal intervals
+
+* N quantiles: the distribution of data values is split into the specified number of quantile intervals such that approximately the same number of data points is in each interval
+
+* Logarithmic intervals: intervals are calculated at values 1,2, and 5 times a power of 10 spanning the range of data, up to a maximum number of contours
+
+* Fixed contour interval: Contours are calculated at multiples of a fixed interval, up to a maximum number of contours
+
+* User selected contour levels: the contour levels are defined by space separated values in the Cotnour levels text field
+
+The parameters used depend on the calculation method.  Possible parameters are:
+
+Number (or max number) of contours: Used as the number of maximum number depending on the method
+
+Minimum/maximum contour level: if not set then these are the minimum and maximum data values
+
+Contour interval:  used for the fixed contour interval method
+
+The output layer has a label attribute for each feature based on the contour level(s) of the feature.  This formatted using three parameters:
+
+Label decimal places: the number of decimal places used to represent the value
+
+Trim trailing zeros from labels: if set then redundant zeros after the decimal point are removed.
+
+Units to append to label values: a string appended to the values in the label, typically units of measurement

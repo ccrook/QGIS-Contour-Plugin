@@ -133,7 +133,7 @@ def calcQuantileContours( z, ncontour, min=None, max=None ):
     return np.percentile(z,pcnt)
     
 
-@contourmethod('log','logarithmic intervals')
+@contourmethod('log','Logarithmic intervals')
 def calcLogContours( z, ncontour, min=None, max=None, mantissa=[1,2,5] ):
     'Contours at up to n values 1, 2, 5 * 10^n between min and max'
     zmin,zmax=_range(z,min,max)
@@ -186,7 +186,7 @@ def calcIntervalContours( z, interval, offset=0.0,min=None, max=None, maxcontour
                            .format(nmax-nmin,self.MaxContours))
     return np.arange(nmin,nmax)*interval+offset
 
-@contourmethod('manual','Specified contour levels')
+@contourmethod('manual','User selected contour levels')
 def parseContours( z, levels ):
     'Contours at specified levels'
     return levels
