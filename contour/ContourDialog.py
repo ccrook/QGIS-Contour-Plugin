@@ -327,19 +327,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
                 # Get a default resolution for point thinning
                 extent=self._layer.extent()
-                resolution=(extent.width()+extent.height())/20000.0;
-                radius=0.000001
-                while radius < resolution:
-                    if radius * 2 > resolution:
-                        break
-                    if radius * 5 > resolution:
-                        radius *= 2
-                        break
-                    if radius * 10 > resolution:
-                        radius *= 5
-                        break
-                    radius *= 10
-                self.uThinRadius.setValue( radius )
                 self._loadingLayer=True
                 haveSelected=self._layer.selectedFeatureCount() > 0
                 self.uSelectedOnly.setChecked(haveSelected)
@@ -353,7 +340,6 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.reloadData()
 
     def dataChanged( self ):
-        self._generator.setSource
         x,y,z=self._generator.data()
         if z is not None:
             zmin=np.min(z)
@@ -392,6 +378,10 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             if self._layer is not None and self.uSelectedOnly.isChecked():
                 fids=self._layer.selectedFeatureIds()
             self._generator.setDataSource( self._layer, self._zField, fids )
+            duptol=0.0
+            if self.uThinPoints.isChecked():
+                duptol=self.uThinRadius.value()
+            self._generator.setDuplicatePointTolerance(duptol)
             self.dataChanged()
         finally:
             self._loadingLayer=False

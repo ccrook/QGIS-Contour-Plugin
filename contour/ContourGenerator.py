@@ -194,7 +194,7 @@ class ContourGenerator( QObject ):
         if zField is not None:
             self.setZField(zField)
 
-    def setDiscardTolerance( self, discardTolerance ):
+    def setDuplicatePointTolerance( self, discardTolerance ):
         if self._discardTolerance != discardTolerance:
             self._discardTolerance=discardTolerance
             self.setReloadData()
