@@ -30,6 +30,7 @@ from . import resources
 from . import ContourMethod
 from .ContourMethod import ContourMethodError
 from .ContourGenerator import ContourGenerator, ContourType, ContourExtendOption
+from .ContourGenerator import ContourError, ContourGenerationError
 
 import sys
 import os.path
@@ -93,15 +94,6 @@ class ContourDialogPlugin:
             QMessageBox.warning(self._iface.mainWindow(), tr("Contour error"),
                 str(sys.exc_info()[1]))
 
-###########################################################
-
-class ContourError(RuntimeError):
-    pass
-
-class ContourGenerationError(ContourError):
-    pass
-
-###########################################################
 
 class ContourDialog(QDialog, Ui_ContourDialog):
 
@@ -177,8 +169,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uDataField.fieldChanged['QString'].connect(self.uDataFieldUpdate)
         self.uSelectedOnly.toggled.connect(self.reloadData)
         self.uUseGrid.toggled.connect(self._generator.setUseGrid)
-        self.uThinPoints.toggled.connect(self.reloadData)
-        self.uThinRadius.valueChanged[float].connect(self.reloadData)
+        self.uRemoveDuplicates.toggled.connect(self.reloadData)
+        self.uDuplicateTolerance.valueChanged[float].connect(self.reloadData)
         self.uContourInterval.valueChanged[float].connect(self.computeLevels)
         self.uSetMinimum.toggled[bool].connect(self.toggleSetMinimum)
         self.uSetMaximum.toggled[bool].connect(self.toggleSetMaximum)
@@ -379,8 +371,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
                 fids=self._layer.selectedFeatureIds()
             self._generator.setDataSource( self._layer, self._zField, fids )
             duptol=0.0
-            if self.uThinPoints.isChecked():
-                duptol=self.uThinRadius.value()
+            if self.uRemoveDuplicates.isChecked():
+                duptol=self.uDuplicateTolerance.value()
             self._generator.setDuplicatePointTolerance(duptol)
             self.dataChanged()
         finally:

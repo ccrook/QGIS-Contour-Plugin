@@ -20,7 +20,7 @@ Method used to calculate the contour levels: The contour levels can be calculate
 
 * Fixed contour interval: Contours are calculated at multiples of a fixed interval, up to a maximum number of contours
 
-* User selected contour levels: the contour levels are defined by space separated values in the Cotnour levels text field
+* User selected contour levels: the contour levels are defined by space separated values in the contour levels text field
 
 The parameters used depend on the calculation method.  Possible parameters are:
 
@@ -28,7 +28,9 @@ Number (or max number) of contours: Used as the number of maximum number dependi
 
 Minimum/maximum contour level: if not set then these are the minimum and maximum data values
 
-Contour interval:  used for the fixed contour interval method
+User selected contour levels: (User selected contour method only) the contour levels to apply as a list of values separated by spaces.
+
+Contour interval: used for the fixed contour interval method
 
 The output layer has a label attribute for each feature based on the contour level(s) of the feature.  This formatted using three parameters:
 

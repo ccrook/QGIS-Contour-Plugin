@@ -245,6 +245,9 @@ class ContourGenerator( QObject ):
         self._x = None
         self._y = None
         self._z = None
+        self._gridShape=None
+        self._gridTested=False
+        self._dataLoaded=True
 
         source=self._source
         zField=self._zField
@@ -297,13 +300,15 @@ class ContourGenerator( QObject ):
                         raise ContourError(tr("Z value {0} is not number")
                                                    .format(zval))
                     if zval is not None:
-                        geom = feat.geometry().asPoint()
+                        fgeom = feat.geometry()
+                        if QgsWkbTypes.flatType(fgeom.wkbType()) != QgsWkbTypes.Point:
+                            raise ContourError(tr("Invalid geometry type for contouring - must be point geometry"))
+                        geom=fgeom.asPoint()
                         x.append(geom.x())
                         y.append(geom.y())
                         z.append(zval)
                 except Exception as ex:
                     raise
-                    pass
                 count = count + 1
 
             npt=len(x)
@@ -328,14 +333,12 @@ class ContourGenerator( QObject ):
         finally:
             feedback.setProgress(0)
 
+        if len(x) < 3:
+            feedback.reportError(tr("Too few points to contour"))
+            return self._x, self._y, self._z
         self._x=x
         self._y=y
         self._z=z
-        self._gridShape=None
-        self._gridTested=False
-        self._dataLoaded=True
-        # NOTE: isgridded should be handled elsewhere probably`
-        self.isGridded()
         return self._x, self._y, self._z
 
     def isGridded(self):
@@ -349,7 +352,7 @@ class ContourGenerator( QObject ):
         return self._gridShape is not None
 
     def gridShape(self):
-        return self._gridShape
+        return self._gridShape if self.isGridded() else None
 
     def levels( self ):
         if self._levels is None:
@@ -470,23 +473,7 @@ class ContourGenerator( QObject ):
             return self._labelNdp
         if self._defaultLabelNdp is None:
             levels=self.levels()
-            ldiff=levels[1:]-levels[:-1]
-            try:
-                ldmin=np.min(ldiff[ldiff > 0.0])
-                # Allow 2dp on minimum increment
-                ldmin /= 100
-                ndp=0
-                while ndp < 10 and ldmin < 1.0:
-                    ndp += 1
-                    ldmin *= 10.0
-                while ndp > 0:
-                    factor=10**ndp
-                    diff=np.max(np.abs(levels*factor-np.round(levels*factor)))
-                    if diff > 0.5:
-                        break
-                    ndp -= 1
-            except:
-                ndp=4 # Arbitrary!
+            ndp=ContourUtils.calcDefaultNdp(levels)
             self._defaultLabelNdp = ndp
         return self._defaultLabelNdp
 
@@ -512,7 +499,7 @@ class ContourGenerator( QObject ):
                 gx,gy,gz=self.gridContourData()
                 cs = contour(gx, gy, gz, levels )
             else:
-                trig,z=trigContourData()
+                trig,z=self.trigContourData()
                 cs = tricontour(trig, z, levels )
         except:
             raise ContourGenerationError.fromException(sys.exc_info())

@@ -52,6 +52,9 @@ from . import resources
 def tr(string):
     return QCoreApplication.translate('Processing', string)
 
+class ContourGeneratorAlgorithmError( RuntimeError ):
+    pass
+
 class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
     """
     Algorithm to calculate contour lines or filled contours from
@@ -72,17 +75,48 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
     PrmContourInterval = 'ContourInterval'
     PrmContourLevels = 'ContourLevels'
     PrmContourType = 'ContourType'
-    PrmExtendContour = 'ExtendContour'
+    PrmExtendContour = 'ExtendOption'
     PrmLabelDecimalPlaces = 'LabelDecimalPlaces'
     PrmLabelTrimZeros = 'LabelTrimZeros'
     PrmLabelUnits = 'LabelUnits'
     PrmDuplicatePointTolerance = 'DuplicatePointTolerance'
 
-    ContourTypeValues=ContourType.types()
-    ContourTypeOptions=[ContourType.description(t) for t in ContourTypeValues]
+    TypeValues=ContourType.types()
+    TypeOptions=[ContourType.description(t) for t in TypeValues]
 
-    ExtendContourValues=ContourExtendOption.options()
-    ExtendContourOptions=[ContourExtendOption.description(t) for t in ExtendContourValues]
+    ExtendValues=ContourExtendOption.options()
+    ExtendOptions=[ContourExtendOption.description(t) for t in ExtendValues]
+
+    MethodValues=[m.id for m in ContourMethod.methods]
+    MethodOptions=[m.name for m in ContourMethod.methods]
+
+    EnumMapping={
+        PrmContourMethod: 
+           (MethodValues,MethodOptions),
+        PrmContourType: 
+           (TypeValues,TypeOptions),
+        PrmExtendContour: 
+           (ExtendValues,ExtendOptions)
+    }
+
+    def _enumParameter(self,name,description,optional=True):
+        values,options=self.EnumMapping[name]
+        return QgsProcessingParameterEnum( name, description, options, optional=optional)
+
+    def _getEnumValue(self, parameters, name, context):
+        # Wishful thinking - currently enum parameter can only accept integer value :-(
+        # Hopefully will be able to get value as code in the future
+        values,options=self.EnumMapping[name]
+        if name not in parameters:
+            return values[0]
+        id=self.parameterAsString(parameters,name,context)
+        if id not in values:
+            try:
+                id=values[int(id)]
+            except:
+                raise ContourGeneratorAlgorithmError(
+                        tr('Invalid value {0} for {1}').format(id,name))
+        return id
 
     def initAlgorithm(self, config):
         """
@@ -120,36 +154,32 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
                 tr('Duplicate point tolerance'),
                 QgsProcessingParameterNumber.Double,
                 minValue=0.0,
-                defaultValue=0.0
+                defaultValue=0.0,
+                optional=True
                 )
         )
 
         # Define the contour type
 
         self.addParameter(
-            QgsProcessingParameterEnum(
+            self._enumParameter(
                 self.PrmContourType,
-                tr("Contour type"),
-                self.ContourTypeOptions
+                tr("Contour type")
             ))
 
         self.addParameter(
-            QgsProcessingParameterEnum(
+            self._enumParameter(
                 self.PrmExtendContour,
-                tr("Filled contour options"),
-                self.ExtendContourOptions
+                tr("Extend filled contour options"),
+                optional=True
             ))
 
         # Define the contour level calculation method
 
-        methods=ContourMethod.methods
-        methodNames=[m.name for m in methods]
-
         self.addParameter(
-            QgsProcessingParameterEnum(
+            self._enumParameter(
                 self.PrmContourMethod,
-                tr('Method used to calculate the contour levels'),
-                methodNames
+                tr('Method used to calculate the contour levels')
             ))
 
         self.addParameter(
@@ -157,7 +187,8 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
                 self.PrmNContour,
                 tr('Number (or max number) of contours'),
                 defaultValue=20,
-                minValue=1
+                minValue=1,
+                optional=True
             ))
 
         self.addParameter(
@@ -182,13 +213,14 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
                 tr('Contour interval'),
                 QgsProcessingParameterNumber.Double,
                 minValue=0.0,
-                defaultValue=1.0
+                defaultValue=1.0,
+                optional=True
                 ))
 
         self.addParameter(
             QgsProcessingParameterString(
                 self.PrmContourLevels,
-                tr('User specified contour levels'),
+                tr('User selected contour levels'),
                 multiLine=True,
                 optional=True
                 ))
@@ -203,7 +235,8 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
                 QgsProcessingParameterNumber.Integer,
                 defaultValue=-1,
                 minValue=-1,
-                maxValue=10
+                maxValue=10,
+                optional=True
                 )
         )
 
@@ -211,14 +244,8 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterBoolean(
                 self.PrmLabelTrimZeros,
                 tr("Trim trailing zeros from labels"),
-                False
-            ))
-
-        self.addParameter(
-            QgsProcessingParameterBoolean(
-                self.PrmLabelTrimZeros,
-                tr("Trim trailing zeros from labels"),
-                False
+                False,
+                optional=True
             ))
 
         self.addParameter(
@@ -246,7 +273,8 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         field = self.parameterAsExpression( parameters, self.PrmInputField, context )
         DuplicatePointTolerance = self.parameterAsDouble( parameters, self.PrmDuplicatePointTolerance, context )
         
-        methodid = self.parameterAsEnum( parameters, self.PrmContourMethod, context)
+        method = self._getEnumValue( parameters, self.PrmContourMethod, context )
+
         ncontour = self.parameterAsInt( parameters, self.PrmNContour, context )
         zmin=None
         zmax=None
@@ -257,20 +285,14 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         interval = self.parameterAsDouble( parameters, self.PrmContourInterval, context )
         levels = self.parameterAsString( parameters, self.PrmContourLevels, context )
 
-        contourtypeid = self.parameterAsEnum( parameters, self.PrmContourType, context )
-        contourtype = self.ContourTypeValues[contourtypeid]
-
-        extendid = self.parameterAsEnum( parameters, self.PrmExtendContour, context )
-        extend = self.ExtendContourValues[extendid]
+        contourtype = self._getEnumValue( parameters, self.PrmContourType, context )
+        extend = self._getEnumValue( parameters, self.PrmExtendContour, context )
         labelndp = self.parameterAsInt( parameters, self.PrmLabelDecimalPlaces, context )
         labeltrim = self.parameterAsBool( parameters, self.PrmLabelTrimZeros, context )
         labelunits = self.parameterAsString( parameters, self.PrmLabelUnits, context )
 
-        feedback.pushInfo('zmin {0}'.format(zmin))
-
         # Construct and configure the contour generator
 
-        method=ContourMethod.methods[methodid].id
 
         params={
             'min':zmin,
@@ -311,11 +333,11 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         return QIcon(":/plugins/contour/contour.png")
 
     def name(self):
-        return 'generatecontours`'
+        return 'generatecontours'
 
     def helpUrl(self):
         file=os.path.realpath(__file__)
-        file = os.path.join(os.path.dirname(file),'doc','ContourGenerator_algorithm.html')
+        file = os.path.join(os.path.dirname(file),'doc','ContourGeneratorAlgorithm.html')
         if not os.path.exists(file):
             return ''
         return QUrl.fromLocalFile(file).toString(QUrl.FullyEncoded)
@@ -325,7 +347,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
     def shortHelpString(self):
         file=os.path.realpath(__file__)
-        file = os.path.join(os.path.dirname(file),'ContourGenerator_algorithm.help')
+        file = os.path.join(os.path.dirname(file),'ContourGeneratorAlgorithm.help')
         if not os.path.exists(file):
             return ''
         with open(file) as helpf:

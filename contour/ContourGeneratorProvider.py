@@ -26,13 +26,9 @@ __author__ = 'Chris Crook'
 __date__ = '2018-04-24'
 __copyright__ = '(C) 2018 by Chris Crook'
 
-# This will get replaced with a git SHA1 when you do a git archive
-
-__revision__ = '$Format:%H$'
-
 from PyQt5.QtGui import QIcon
 from qgis.core import QgsProcessingProvider
-from .ContourGenerator_algorithm import ContourGeneratorAlgorithm
+from .ContourGeneratorAlgorithm import ContourGeneratorAlgorithm
 from . import resources
 
 

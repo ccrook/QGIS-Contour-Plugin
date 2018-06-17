@@ -1,0 +1,139 @@
+<html>
+    <head><title>Contour generator processing algorithm</title></head>
+    <style type="text/css">
+        body { font-family: verdana, arial, sans-serif;
+            font-size: 80%;
+                    background-color: #ffffff;  }
+        h1 { font-size: 120%; }
+        h2 { font-size: 100%; }
+        h3 { font-size: 90%; font-style: italic }
+        h4 { font-size: 85%; font-style: italic; margin-left: 2em }
+        p.quote { margin: 0,3em,0,3em; font-style: italic;}
+        div.indent { margin-left: 3em; }
+    </style>
+    <body>
+    <h1>Contour generator processing algorithm</h1>
+    <img src="../contour.png" alt="Button image" style="float:right"/>
+    <p>The contour generator generates a layer of contour lines or polygons based on a 
+    values at a set of data points. The algorithm uses a set of parameters defining the source
+    of the data for contouring, and the parameters used to define how the contour levels are 
+    calculated. 
+    </p>
+    <p>The algorithm requires the python libraries <a href="http://www.numpy.org">numpy</a> and
+    <a href="https://matplotlib.org">matplotlib</a> python libaries to be installed.</p>
+    <p>
+    As with all processing algorithms the parameters can be entered manually into the algorithm
+    dialog box, or created programmatically. This allows the contour function to be used 
+    by other plugins and processing scripts.
+    </p>
+    <p>
+    The contouring function can also be accessed from the ContourDialog.
+    </p>
+       <img src="images/contour_generator_algorithm.png" alt="Contour generator algorithm" style="float:right; padding-left: 2em"/>
+    <h2>Parameters</h2>
+    <p>The plugin uses the following parameters:</p>
+
+</p>
+<h3>Input point layer (InputLayer)</h3>
+<p> The source of data points to contour
+
+<h3>Value to contour (InputField)</h3>
+<p> A field or expression defining the data value at each point
+
+</p>
+<h3>Duplicate point tolerance (DuplicatePointTolerance)</h3>
+<p> If greater than zero then where points are closer than this to each other only one of the points will be used
+
+</p>
+<h3>Contour type (ContourType)</h3>
+<p> The type of layer to create.  Can be contour lines, filled contour polygons each representing the area where the data lies between two contour levels, or layer polygons representing the area where the data is greater than the contour level
+</p>
+
+<h3>Filled contour options (ExtendOption)</h3>
+<p> If creating filled contours then select whether to create polygons where the data is less than the minimum contour level and/or greater than the maximum contour level. Options are: 
+<ul>
+
+</ul>
+</p>
+<h3>Method used to calculate the contour levels (ContourMethod)</h3>
+<p>The contour levels can be calculated from the data values using one of a number of possible algorithms.  Options are:
+<p>
+
+</ul>
+<li><span class="option">N equal intervals</span> (0)
+the range from the minimum to the maximum data value is divided into the specified number of equal intervals
+</li>
+<li><span class="option">N quantiles</span> (1)
+the distribution of data values is split into the specified number of quantile intervals such that approximately the same number of data points is in each interval
+</li>
+<li><span class="option">Logarithmic intervals</span> (2)
+intervals are calculated at values 1,2, and 5 times a power of 10 spanning the range of data, up to a maximum number of contours
+</li>
+<li><span class="option">Fixed contour interval</span> (3)
+Contours are calculated at multiples of a fixed interval, up to a maximum number of contours
+</li>
+<li><span class="option">User selected contour levels</span> (4)
+the contour levels are defined by space separated values in the contour levels text field
+</li>
+</ul>
+</p>
+
+<h3>Number (or max number) of contours (NContour)</h3>
+<p> For the &quot;N equal intervals&quot; and &quot;N quantiles&quot; methods specifies the 
+number of intervals to create.  For the &quot;Logarithmic intervals&quot; and &quot;Fixed contour interval&quot; methods this is the maximum number of contour levels that will be created.
+</p>
+<h3>Minimum contour level (MinContourValue)</h3>
+<p>Specifies the minimum contour level.  By default this comes from the minimum data value.</p>
+
+<h3>Maximum contour level (MaxContourValue)</h3>
+<p>Specifies the maximum contour level.  By default this comes from the maximum data value.</p>
+
+<h3>Contour interval (ContourInterval)</h3>
+<p>For the &quot;Fixed contour interval&quot; method this specifies the interval between contour levels.</p>
+
+<h3>Label decimal places (LabelDecimalPlaces)</h3>
+<p>Specifies the decimal places used to represent the value in the label attribute of each
+contour feature.  If -1 or not set then a value is calculated based on the contour levels. </p>
+
+<h3>Trim trailing zeros from labels (LabelTrimZeros)</h3>
+<p>If this is True then trailing zeros after the decimal point are removed from the
+value in the lavel attribute.  </p>
+
+<h3>Units to append to label values (LabelUnits)</h3>
+<p>Defines a text string that is appended to the label attribute of each contour feature.  Typically this might be units of measurement.</p>
+
+<h3>Output Layer (OutputLayer)</h3>
+<p>The destination layer for the contour features.</p>
+
+<h2>Using the contour generator algorithm programmatically</h2>
+<p>
+The following example shows the use of the algorithm in a python script.  Most of the paramters are
+optional, but may be required depending on the contour method chosen.
+</p>
+<pre>
+import processing
+layer=iface.mapCanvas().currentLayer()
+result=processing.run(
+   "contourplugin:generatecontours",
+      { 'ContourInterval' : 1, 
+        'ContourLevels' : '', 
+        'ContourMethod' : 1, 
+        'ContourType' : 0, 
+        'DuplicatePointTolerance' : 0, 
+        'ExtendOption' : 0, 
+        'InputField' : '"z"', 
+        'InputLayer' : layer,
+        'LabelDecimalPlaces' : -1, 
+        'LabelTrimZeros' : False, 
+        'LabelUnits' : '', 
+        'MaxContourValue' : None, 
+        'MinContourValue' : None, 
+        'NContour' : 20, 
+        'OutputLayer' : 'memory:' }
+        )
+layer=result['OutputLayer']
+QgsProject.instance().addMapLayer(layer)
+</pre>
+    </body>
+
+</html>

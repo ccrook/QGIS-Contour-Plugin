@@ -41,3 +41,26 @@ def discardDuplicatePoints(x,y,resolution,isLonLat=False):
     index=_discardIndex(x,y,x0,y0+resolution/2,resolution,index)
     index=_discardIndex(x,y,x0+resolution/2,y0+resolution/2,resolution,index)
     return index
+
+def calcDefaultNdp( levels ):
+    try:
+        levels=np.array(levels)
+        ldiff=levels[1:]-levels[:-1]
+        ldmin=np.min(ldiff[ldiff > 0.0])
+        # Allow 2dp on minimum increment
+        ldmin /= 100
+        ndp=0
+        while ndp < 10 and ldmin < 1.0:
+            ndp += 1
+            ldmin *= 10.0
+        print("Ndp1",ndp)
+        while ndp > 0:
+            factor=10**(ndp-1)
+            rerr=np.abs(levels*factor-np.round(levels*factor))
+            diff=np.max(rerr)
+            if diff >= 0.05:
+                break
+            ndp -= 1
+    except:
+        ndp=4 # Arbitrary!
+    return ndp

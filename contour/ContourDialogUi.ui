@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>739</height>
+    <height>746</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -74,12 +74,12 @@
            <string>Remove duplicate points</string>
           </property>
           <property name="buddy">
-           <cstring>uThinPoints</cstring>
+           <cstring>uRemoveDuplicates</cstring>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="uThinPoints">
+         <widget class="QCheckBox" name="uRemoveDuplicates">
           <property name="text">
            <string/>
           </property>
@@ -91,17 +91,26 @@
            <string>Tolerance</string>
           </property>
           <property name="buddy">
-           <cstring>uThinRadius</cstring>
+           <cstring>uDuplicateTolerance</cstring>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="uThinRadius">
+         <widget class="QDoubleSpinBox" name="uDuplicateTolerance">
           <property name="decimals">
-           <number>6</number>
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>99999.998999999996158</double>
           </property>
           <property name="singleStep">
-           <double>0.000001000000000</double>
+           <double>0.001000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.001000000000000</double>
           </property>
          </widget>
         </item>
@@ -698,8 +707,8 @@
  <tabstops>
   <tabstop>uSourceLayer</tabstop>
   <tabstop>uSelectedOnly</tabstop>
-  <tabstop>uThinPoints</tabstop>
-  <tabstop>uThinRadius</tabstop>
+  <tabstop>uRemoveDuplicates</tabstop>
+  <tabstop>uDuplicateTolerance</tabstop>
   <tabstop>uUseGrid</tabstop>
   <tabstop>uLinesContours</tabstop>
   <tabstop>uFilledContours</tabstop>

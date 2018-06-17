@@ -35,7 +35,7 @@ import sys
 import inspect
 
 from qgis.core import QgsProcessingAlgorithm, QgsApplication
-from .ContourGenerator_provider import ContourGeneratorProvider
+from .ContourGeneratorProvider import ContourGeneratorProvider
 from .ContourDialog import ContourDialogPlugin
 
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]

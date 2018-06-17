@@ -39,16 +39,20 @@ class DataGridder:
         if self._x is None or self._y is None:
             return None, None
         if not self._tested:
-            self._tryGridOrdered()
-            valid=self._gridIsValid()
-            if not valid:
-                self._tryGridReorder()
-                valid=self._gridIsValid()
-            if not valid:
-                self._gridShape=None
-                self._gridOrder=None
-            self._isValid=valid
             self._tested=True
+            if len(self._x) > 4:
+                try:
+                    self._tryGridOrdered()
+                    valid=self._gridIsValid()
+                    if not valid:
+                        self._tryGridReorder()
+                        valid=self._gridIsValid()
+                    if not valid:
+                        self._gridShape=None
+                        self._gridOrder=None
+                    self._isValid=valid
+                except:
+                    pass
         return self._gridShape,self._gridOrder
 
     def _tryGridOrdered( self ):
