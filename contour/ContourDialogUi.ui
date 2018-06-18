@@ -502,7 +502,7 @@
              <string>Number of decimal places shown in labels</string>
             </property>
             <property name="minimum">
-             <number>0</number>
+             <number>-1</number>
             </property>
             <property name="maximum">
              <number>10</number>
@@ -518,12 +518,12 @@
              <string>Trim zeros</string>
             </property>
             <property name="buddy">
-             <cstring>uTrimZeroes</cstring>
+             <cstring>uTrimZeros</cstring>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="uTrimZeroes">
+           <widget class="QCheckBox" name="uTrimZeros">
             <property name="text">
              <string/>
             </property>
@@ -725,7 +725,7 @@
   <tabstop>uLevelsList</tabstop>
   <tabstop>uOutputName</tabstop>
   <tabstop>uPrecision</tabstop>
-  <tabstop>uTrimZeroes</tabstop>
+  <tabstop>uTrimZeros</tabstop>
   <tabstop>uLabelUnits</tabstop>
   <tabstop>uApplyColors</tabstop>
   <tabstop>uColorRamp</tabstop>

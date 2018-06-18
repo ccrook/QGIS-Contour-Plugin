@@ -43,7 +43,7 @@ def tr(string):
 class ContourError( RuntimeError ):
 
     def message(self):
-        return self.args[0] if len(self.args)  > 1 else "Exception"
+        return self.args[0] if len(self.args) > 0 else "Exception"
 
 class ContourGenerationError( ContourError ):
 
@@ -658,7 +658,6 @@ class ContourGenerator( QObject ):
                     geom.translate(dx,dy)
                 except Exception as ex:
                     ninvalid += 1
-                    # print("Exception:",ex)
                     continue
                 feat = QgsFeature(fields)
                 feat.setGeometry(geom)

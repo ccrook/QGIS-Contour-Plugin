@@ -53,7 +53,6 @@ def calcDefaultNdp( levels ):
         while ndp < 10 and ldmin < 1.0:
             ndp += 1
             ldmin *= 10.0
-        print("Ndp1",ndp)
         while ndp > 0:
             factor=10**(ndp-1)
             rerr=np.abs(levels*factor-np.round(levels*factor))

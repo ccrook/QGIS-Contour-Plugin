@@ -7,7 +7,7 @@ from collections import namedtuple
 
 class ContourMethodError( RuntimeError ):
     def message(self):
-        return self.args[0] if len(self.args)  > 1 else "Exception"
+        return self.args[0] if len(self.args)  > 0 else "Exception"
 
 ContourMethod=namedtuple('ContourMethod','id name calc required optional description')
 
