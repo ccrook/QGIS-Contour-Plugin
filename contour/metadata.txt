@@ -4,7 +4,7 @@
 name=Contour plugin
 qgisMinimumVersion=3.0
 description=Generates contours from point layer
-version=2.0
+version=2.0.0
 
 about=Generate a contour layer based on an attribute of a point vector layer. 
 
@@ -15,7 +15,7 @@ about=Generate a contour layer based on an attribute of a point vector layer.
 
  Requires python modules numpy and matplotlib
 
- Recommend loading the MemoryLayerSaver plugin to save the contours with the project
+ Recommends loading the MemoryLayerSaver plugin to save the contours with the project
 
 author=Chris Crook, Lionel Roubeyrie
 email=ccrook@linz.govt.nz
