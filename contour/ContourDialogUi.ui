@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>478</width>
-    <height>653</height>
+    <width>658</width>
+    <height>746</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,13 +19,13 @@
   <property name="sizeGripEnabled">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,1,0,0">
-   <item row="0" column="0" colspan="2">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0,0">
+   <item>
     <widget class="QGroupBox" name="groupBox_2">
      <property name="title">
       <string>Input</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0" rowminimumheight="0,0,0,0,0">
+     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0">
       <item row="0" column="0">
        <layout class="QFormLayout" name="formLayout_2">
         <property name="topMargin">
@@ -34,49 +34,35 @@
         <item row="0" column="0">
          <widget class="QLabel" name="label_3">
           <property name="text">
-           <string>Vector layer</string>
+           <string>Point layer</string>
           </property>
           <property name="buddy">
-           <cstring>uLayerName</cstring>
+           <cstring>uSourceLayer</cstring>
           </property>
          </widget>
         </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="uLayerName">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="toolTip">
-           <string>Point layer containing data to contour</string>
-          </property>
-          <property name="statusTip">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
+        <item row="2" column="0">
          <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>Data field   </string>
+           <string>Data value</string>
           </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QgsFieldExpressionWidget" name="uDataField">
-          <property name="filters">
-           <set>QgsFieldProxyModel::Numeric</set>
+          <property name="buddy">
+           <cstring>uDataField</cstring>
           </property>
          </widget>
         </item>
         <item row="2" column="1">
+         <widget class="QgsFieldExpressionWidget" name="uDataField"/>
+        </item>
+        <item row="3" column="1">
          <widget class="QCheckBox" name="uSelectedOnly">
           <property name="text">
            <string>Use selected points only</string>
           </property>
          </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QgsMapLayerComboBox" name="uSourceLayer"/>
         </item>
        </layout>
       </item>
@@ -85,15 +71,15 @@
         <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Apply point thinning</string>
+           <string>Remove duplicate points</string>
           </property>
           <property name="buddy">
-           <cstring>uThinPoints</cstring>
+           <cstring>uRemoveDuplicates</cstring>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="uThinPoints">
+         <widget class="QCheckBox" name="uRemoveDuplicates">
           <property name="text">
            <string/>
           </property>
@@ -102,20 +88,29 @@
         <item>
          <widget class="QLabel" name="label_11">
           <property name="text">
-           <string>Radius</string>
+           <string>Tolerance</string>
           </property>
           <property name="buddy">
-           <cstring>uThinRadius</cstring>
+           <cstring>uDuplicateTolerance</cstring>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="uThinRadius">
+         <widget class="QDoubleSpinBox" name="uDuplicateTolerance">
           <property name="decimals">
-           <number>6</number>
+           <number>3</number>
+          </property>
+          <property name="minimum">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>99999.998999999996158</double>
           </property>
           <property name="singleStep">
-           <double>0.000001000000000</double>
+           <double>0.001000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.001000000000000</double>
           </property>
          </widget>
         </item>
@@ -184,12 +179,12 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>Contouring</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,1" columnstretch="0,0,1">
+     <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0,0,0,0,0" columnstretch="0,0,0">
       <item row="0" column="0" colspan="3">
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
@@ -216,24 +211,60 @@
         <item>
          <widget class="QRadioButton" name="uLayerContours">
           <property name="text">
-           <string>filled layers</string>
+           <string>contour layers</string>
           </property>
          </widget>
         </item>
+        <item>
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
       </item>
-      <item row="1" column="0">
+      <item row="10" column="1">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Minimum</string>
+        </property>
+        <property name="buddy">
+         <cstring>uSetMinimum</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>Number</string>
         </property>
         <property name="buddy">
-         <cstring>uLevelsNumber</cstring>
+         <cstring>uNContour</cstring>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="uLevelsNumber">
+      <item row="3" column="1">
+       <widget class="QSpinBox" name="uNContour">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -254,18 +285,133 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_5">
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_10">
         <property name="text">
-         <string>Min</string>
+         <string>Extend</string>
         </property>
         <property name="buddy">
-         <cstring>uMinContour</cstring>
+         <cstring>uExtend</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QComboBox" name="uExtend">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="uSetMaximum">
+          <property name="text">
+           <string>Set</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="uMaxContour">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="locale">
+           <locale language="C" country="AnyCountry"/>
+          </property>
+          <property name="decimals">
+           <number>4</number>
+          </property>
+          <property name="minimum">
+           <double>-999999999.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>999999999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Method</string>
+        </property>
+        <property name="buddy">
+         <cstring>uMethod</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="uMethod">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="uSetMinimum">
+          <property name="text">
+           <string>Set</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="uMinContour">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="locale">
+           <locale language="C" country="AnyCountry"/>
+          </property>
+          <property name="decimals">
+           <number>4</number>
+          </property>
+          <property name="minimum">
+           <double>-999999999.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>999999999.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Maximum</string>
+        </property>
+        <property name="buddy">
+         <cstring>uSetMaximum</cstring>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="uMinContour">
+       <widget class="QDoubleSpinBox" name="uContourInterval">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -286,92 +432,17 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_6">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_15">
         <property name="text">
-         <string>Max</string>
+         <string>Interval</string>
         </property>
         <property name="buddy">
-         <cstring>uMaxContour</cstring>
+         <cstring>uContourInterval</cstring>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_10">
-        <property name="text">
-         <string>Extend</string>
-        </property>
-        <property name="buddy">
-         <cstring>uExtend</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QComboBox" name="uExtend">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <item>
-         <property name="text">
-          <string>neither</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>min</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>max</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>both</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Method</string>
-        </property>
-        <property name="buddy">
-         <cstring>uMethod</cstring>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QComboBox" name="uMethod">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <item>
-         <property name="text">
-          <string>Equal</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Quantile</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Manual</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item row="1" column="2" rowspan="6">
+      <item row="1" column="2" rowspan="10">
        <widget class="QListWidget" name="uLevelsList">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -384,68 +455,10 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="1">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="3" column="1">
-       <widget class="QDoubleSpinBox" name="uMaxContour">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="locale">
-         <locale language="C" country="AnyCountry"/>
-        </property>
-        <property name="decimals">
-         <number>4</number>
-        </property>
-        <property name="minimum">
-         <double>-999999999.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>999999999.000000000000000</double>
-        </property>
-       </widget>
-      </item>
      </layout>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QProgressBar" name="progressBar">
-     <property name="value">
-      <number>0</number>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-     <property name="textVisible">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QDialogButtonBox" name="uButtonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Close|QDialogButtonBox::Help|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" colspan="2">
+   <item>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
       <string>Output</string>
@@ -489,7 +502,7 @@
              <string>Number of decimal places shown in labels</string>
             </property>
             <property name="minimum">
-             <number>0</number>
+             <number>-1</number>
             </property>
             <property name="maximum">
              <number>10</number>
@@ -502,12 +515,15 @@
           <item>
            <widget class="QLabel" name="label_14">
             <property name="text">
-             <string>Trim zeroes</string>
+             <string>Trim zeros</string>
+            </property>
+            <property name="buddy">
+             <cstring>uTrimZeros</cstring>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="uTrimZeroes">
+           <widget class="QCheckBox" name="uTrimZeros">
             <property name="text">
              <string/>
             </property>
@@ -552,7 +568,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1,0">
+         <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1,0,0">
           <property name="bottomMargin">
            <number>0</number>
           </property>
@@ -564,7 +580,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QgsColorRampComboBox" name="uColorRamp"/>
+           <widget class="QgsColorRampButton" name="uColorRamp"/>
           </item>
           <item>
            <widget class="QCheckBox" name="uReverseRamp">
@@ -573,12 +589,28 @@
             </property>
            </widget>
           </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
          </layout>
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_13">
           <property name="text">
-           <string>Apply colors</string>
+           <string>Apply colours</string>
+          </property>
+          <property name="buddy">
+           <cstring>uApplyColors</cstring>
           </property>
          </widget>
         </item>
@@ -586,6 +618,66 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <widget class="QgsMessageBar" name="uMessageBar" native="true">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <horstretch>1</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>27</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QProgressBar" name="progressBar">
+       <property name="value">
+        <number>0</number>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="textVisible">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="uHelpButton">
+       <property name="text">
+        <string>Help</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="uAddButton">
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="uCloseButton">
+       <property name="text">
+        <string>Close</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
@@ -596,69 +688,51 @@
    <header>qgsfieldexpressionwidget.h</header>
   </customwidget>
   <customwidget>
-   <class>QgsColorRampComboBox</class>
+   <class>QgsMapLayerComboBox</class>
    <extends>QComboBox</extends>
+   <header>qgsmaplayercombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsColorRampButton</class>
+   <extends>QToolButton</extends>
    <header>qgis.gui.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsMessageBar</class>
+   <extends>QWidget</extends>
+   <header>qgsmessagebar.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>uLayerName</tabstop>
+  <tabstop>uSourceLayer</tabstop>
   <tabstop>uSelectedOnly</tabstop>
-  <tabstop>uThinPoints</tabstop>
-  <tabstop>uThinRadius</tabstop>
+  <tabstop>uRemoveDuplicates</tabstop>
+  <tabstop>uDuplicateTolerance</tabstop>
   <tabstop>uUseGrid</tabstop>
   <tabstop>uLinesContours</tabstop>
   <tabstop>uFilledContours</tabstop>
   <tabstop>uBoth</tabstop>
   <tabstop>uLayerContours</tabstop>
-  <tabstop>uLevelsNumber</tabstop>
+  <tabstop>uMethod</tabstop>
+  <tabstop>uContourInterval</tabstop>
+  <tabstop>uNContour</tabstop>
+  <tabstop>uSetMinimum</tabstop>
   <tabstop>uMinContour</tabstop>
+  <tabstop>uSetMaximum</tabstop>
   <tabstop>uMaxContour</tabstop>
   <tabstop>uExtend</tabstop>
-  <tabstop>uMethod</tabstop>
   <tabstop>uLevelsList</tabstop>
   <tabstop>uOutputName</tabstop>
   <tabstop>uPrecision</tabstop>
-  <tabstop>uTrimZeroes</tabstop>
+  <tabstop>uTrimZeros</tabstop>
   <tabstop>uLabelUnits</tabstop>
   <tabstop>uApplyColors</tabstop>
   <tabstop>uColorRamp</tabstop>
   <tabstop>uReverseRamp</tabstop>
-  <tabstop>uButtonBox</tabstop>
+  <tabstop>uAddButton</tabstop>
+  <tabstop>uCloseButton</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>uButtonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>ContourDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>372</x>
-     <y>493</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>215</x>
-     <y>290</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>uButtonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>ContourDialog</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>372</x>
-     <y>493</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>132</x>
-     <y>239</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
