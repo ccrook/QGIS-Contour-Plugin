@@ -6,6 +6,7 @@ import traceback
 from .DataGridder import DataGridder
 from . import ContourUtils
 from . import ContourMethod
+from .ContourMethod import ContourMethodError
 
 qgis_qhull_fails=platform.platform().startswith('Linux')
 

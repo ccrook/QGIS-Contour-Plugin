@@ -117,7 +117,7 @@ class Ui_ContourDialog(object):
         sizePolicy.setHeightForWidth(self.uNContour.sizePolicy().hasHeightForWidth())
         self.uNContour.setSizePolicy(sizePolicy)
         self.uNContour.setMinimum(1)
-        self.uNContour.setMaximum(999)
+        self.uNContour.setMaximum(9999)
         self.uNContour.setProperty("value", 10)
         self.uNContour.setObjectName("uNContour")
         self.gridLayout_2.addWidget(self.uNContour, 3, 1, 1, 1)

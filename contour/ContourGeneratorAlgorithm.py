@@ -45,6 +45,7 @@ from qgis.core import (QgsProcessing,
                        QgsProcessingParameterFeatureSink,
                        QgsWkbTypes)
 from .ContourGenerator import ContourGenerator, ContourType, ContourExtendOption
+from .ContourGenerator import ContourError, ContourMethodError
 from . import ContourMethod
 from . import resources
 
@@ -310,22 +311,23 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         generator.setContourExtendOption( extend )
         generator.setLabelFormat( labelndp, labeltrim, labelunits )
 
-        isgridded=generator.isGridded()
-        feedback.pushInfo("Contouring using {0}: {1}".format(method,params))
-
         # Create the destination layer
 
-        wkbtype=generator.wkbtype()
-        fields=generator.fields()
-        crs=generator.crs()
+        dest_id=None
+        try:
+            wkbtype=generator.wkbtype()
+            fields=generator.fields()
+            crs=generator.crs()
 
-        (sink, dest_id) = self.parameterAsSink(parameters, self.PrmOutputLayer,
-                context, fields, wkbtype, crs )
+            (sink, dest_id) = self.parameterAsSink(parameters, self.PrmOutputLayer,
+                    context, fields, wkbtype, crs )
 
-        # Add a feature in the sink
+            # Add features to the sink
+            for feature in generator.contourFeatures():
+                sink.addFeature(feature, QgsFeatureSink.FastInsert)
 
-        for feature in generator.contourFeatures():
-            sink.addFeature(feature, QgsFeatureSink.FastInsert)
+        except (ContourError,ContourMethodError) as ex:
+            feedback.reportError(ex.message())
 
         return {self.PrmOutputLayer: dest_id}
 

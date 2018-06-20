@@ -169,7 +169,7 @@ def calcLogContours( z, ncontour, min=None, max=None, mantissa=[1,2,5] ):
     return levels
 
 @contourmethod('interval','Fixed contour interval')
-def calcIntervalContours( z, interval, offset=0.0,min=None, max=None, maxcontours=50):
+def calcIntervalContours( z, interval, offset=0.0,min=None, max=None, maxcontour=50):
     'Contours at specified spacing between min and max'
     if interval <= 0:
         raise ContourMethodError(tr("Contour interval must be greater than zero"))
@@ -181,9 +181,9 @@ def calcIntervalContours( z, interval, offset=0.0,min=None, max=None, maxcontour
     if nmax == nmin:
         nmax += 1
     nmax += 1
-    if nmax-nmin >= maxcontours:
+    if nmax-nmin >= maxcontour:
         raise ContourMethodError(tr("Number of contours ({0}) exceeds maximum allowed ({1})")
-                           .format(nmax-nmin,maxcontours))
+                           .format(nmax-nmin,maxcontour))
     return np.arange(nmin,nmax)*interval+offset
 
 @contourmethod('manual','User selected contour levels')
