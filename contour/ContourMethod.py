@@ -183,7 +183,7 @@ def calcIntervalContours( z, interval, offset=0.0,min=None, max=None, maxcontour
     nmax += 1
     if nmax-nmin >= maxcontours:
         raise ContourMethodError(tr("Number of contours ({0}) exceeds maximum allowed ({1})")
-                           .format(nmax-nmin,self.MaxContours))
+                           .format(nmax-nmin,maxcontours))
     return np.arange(nmin,nmax)*interval+offset
 
 @contourmethod('manual','User selected contour levels')
