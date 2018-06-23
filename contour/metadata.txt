@@ -4,7 +4,7 @@
 name=Contour plugin
 qgisMinimumVersion=3.0
 description=Generates contours from point layer
-version=2.0.3
+version=2.0.4
 
 about=Generate a contour layer based on an attribute of a point vector layer. 
 
@@ -28,6 +28,6 @@ tags=python, contour, processing
 homepage=https:://github.com/ccrook/QGIS-Contour-Plugin
 category=Vector
 icon=./images/contour.png
-experimental=True
+experimental=False
 deprecated=False
 
