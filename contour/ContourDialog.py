@@ -885,6 +885,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         settings.setValue(base+'applyColors','yes' if self.uApplyColors.isChecked() else 'no')
         settings.setValue(base+'ramp',self.colorRampToString(self.uColorRamp.colorRamp()))
         settings.setValue(base+'reverseRamp','yes' if self.uReverseRamp.isChecked() else 'no')
+        settings.setValue(base+'dialogWidth',str(self.width()))
+        settings.setValue(base+'dialogHeight',str(self.height()))
 
     def loadSettings( self ):
         settings=QSettings()
@@ -962,5 +964,15 @@ class ContourDialog(QDialog, Ui_ContourDialog):
 
             trimZeros=settings.value(base+'trimZeros')
             self.uTrimZeros.setChecked(trimZeros=='yes')
+
+            width=settings.value(base+'dialogWidth')
+            height=settings.value(base+'dialogHeight')
+            if width is not None and height is not None:
+                try:
+                    width=int(width)
+                    height=int(height)
+                    self.resize(width,height)
+                except:
+                    pass
         except:
             pass
