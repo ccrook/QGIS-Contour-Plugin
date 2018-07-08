@@ -187,23 +187,23 @@ class ContourGenerator( QObject ):
     def isCanceled( self ):
         return None
 
-    def setDataSource( self, source, zField=None, sourceFids=None ):
+    def setDataSource( self, source, zField=None, sourceFids=None, zFieldName=None ):
         if self._source != source or self._sourceFids != sourceFids:
             self.setReloadData()
         self._source=source
         self._sourceFids=sourceFids
         if zField is not None:
-            self.setZField(zField)
+            self.setZField(zField,zFieldName)
 
     def setDuplicatePointTolerance( self, discardTolerance ):
         if self._discardTolerance != discardTolerance:
             self._discardTolerance=discardTolerance
             self.setReloadData()
 
-    def setZField( self, zField ):
+    def setZField( self, zField, zFieldName=None ):
         if self._zField != zField:
             self._zField=zField
-            self._zFieldName=zField
+            self._zFieldName=zFieldName
             self.setReloadData()
 
     def setUseGrid( self, usegrid ):
@@ -267,15 +267,7 @@ class ContourGenerator( QObject ):
         z = list()
         try:
             if source.fields().lookupField(zField) >= 0:
-                self._zFieldName=zField
-                # Have had issues with losing field quoting 
-                # and misinterpreting field names
                 zField='"'+zField.replace('"','""')+'"'
-            else:
-                if re.match(r'^"([^"]|"")+"$',zField):
-                    self._zFieldName=zField[1:-1].replace('""','"')
-                else:
-                    self._zFieldName="Expression"
             expression=QgsExpression(zField)
             if expression.hasParserError():
                 raise ContourError(tr("Cannot parse")+" "+zField)
@@ -374,8 +366,21 @@ class ContourGenerator( QObject ):
     def wkbtype( self ):
         return ContourType.wkbtype(self._contourType)
 
+    def zFieldName( self ):
+        zfield=self._zFieldName or self._zField
+        if zfield is None:
+            zfield='none'
+        elif re.search(r'[\(\)]',zfield):
+            zfield='expression'
+        elif re.match(r'^\"([^\"]|\"\")+\"$',zfield):
+            zfield=zfield[1:-1].replace('""','"')
+        zfield=re.sub(r'\W+','_',zfield)
+        if re.match(r'^\d',zfield):
+            zfield='_'+zfield
+        return zfield
+
     def fields( self ):
-        zFieldName=self._zFieldName
+        zFieldName=self.zFieldName()
         if self._contourType == ContourType.filled:
             fielddef= [('index',int),
                        (zFieldName+"_min",float),
@@ -506,7 +511,7 @@ class ContourGenerator( QObject ):
             raise ContourGenerationError.fromException(sys.exc_info())
 
         fields = self.fields()
-        zfield=self._zFieldName
+        zfield=self.zFieldName()
         dx,dy=self._origin
         for i, line in enumerate(cs.collections):
             level=float(cs.levels[i])
@@ -589,8 +594,9 @@ class ContourGenerator( QObject ):
         fields = self.fields()
         ninvalid=0
         dx,dy=self._origin
-        zminfield=self._zFieldName+'_min'
-        zmaxfield=self._zFieldName+'_max'
+        zfieldname=self.zFieldName()
+        zminfield=zfieldname+'_min'
+        zmaxfield=zfieldname+'_max'
 
         for i, polygon in enumerate(cs.collections):
             level_min=levels[i]
@@ -633,7 +639,7 @@ class ContourGenerator( QObject ):
         fields = self.fields()
         ninvalid=0
         dx,dy=self._origin
-        zfield=self._zFieldName
+        zfield=self.zFieldName()
         zmax=np.max(gz)
         zmax += (1.0+abs(zmax))
         zmin = np.min(gz)
