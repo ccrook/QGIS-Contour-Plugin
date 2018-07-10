@@ -554,6 +554,7 @@ class ContourGenerator( QObject ):
         Construct QgsMultiPolygon from matplotlib version
         '''
         mpoly=[]
+        invalid=0
         for path in polygon.get_paths():
             path.should_simplify = False
             poly = path.to_polygons()
@@ -562,13 +563,13 @@ class ContourGenerator( QObject ):
             if len(poly[0]) < 3:
                 # Have had one vertix polygon from matplotlib!
                 continue
-            mpoly.append([
-                [QgsPointXY(x,y) for x,y in p]
-                 for p in poly if len(p) > 3 ])
-        if len(mpoly) < 1:
-            return None
-        geom=QgsGeometry.fromMultiPolygonXY(mpoly)
-        geom.makeValid()
+            polypts=[[QgsPointXY(x,y) for x,y in p]
+                 for p in poly if len(p) > 3 ]
+            mpoly.append(polypts)
+        geom = None
+        if len(mpoly) > 0:
+            geom=QgsGeometry.fromMultiPolygonXY(mpoly)
+            geom=geom.makeValid()
         return geom
 
     def filledContourFeatures(self ):
@@ -614,8 +615,8 @@ class ContourGenerator( QObject ):
                 feat = QgsFeature(fields)
                 feat.setGeometry(geom)
                 feat['index']=i
-                feat[zminfield]=level_min
-                feat[zmaxfield]=level_max
+                feat[zminfield]=float(level_min)
+                feat[zmaxfield]=float(level_max)
                 feat['label']=label
                 yield feat
             except Exception as ex:
@@ -669,7 +670,7 @@ class ContourGenerator( QObject ):
                 feat = QgsFeature(fields)
                 feat.setGeometry(geom)
                 feat['index']=i
-                feat[zfield]=level
+                feat[zfield]=float(level)
                 feat['label']=self._levelLabel(level)
                 yield feat
             except Exception as ex:

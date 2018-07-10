@@ -4,7 +4,7 @@
 name=Contour plugin
 qgisMinimumVersion=3.0
 description=Generates contours from point layer
-version=2.0.5
+version=2.0.6
 
 about=Generate a contour layer based on an attribute of a point vector layer. 
 
