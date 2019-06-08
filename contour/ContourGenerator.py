@@ -31,7 +31,6 @@ _mplAvailable=False
 try:
     import numpy as np
     from matplotlib.pyplot import contour, contourf, tricontour, tricontourf
-    from matplotlib.mlab import griddata
     from matplotlib.tri import Triangulation, TriAnalyzer
     _mplAvailable=True
 except ImportError:

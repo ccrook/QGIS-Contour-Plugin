@@ -43,8 +43,6 @@ mplAvailable=True
 try:
     import numpy as np
     import matplotlib as mpl
-    import matplotlib.pyplot as plt
-    from matplotlib.mlab import griddata
 except ImportError:
     mplAvailable=False
 
