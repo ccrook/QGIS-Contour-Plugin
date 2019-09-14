@@ -286,6 +286,8 @@ class ContourGenerator( QObject ):
                     feedback.setProgress(int(current * percent))
                     context.setFeature(feat)
                     zval=expression.evaluate(context)
+                    if zval is None or (isinstance(zval,QVariant) and zval.isNull()):
+                        continue
                     try:
                         zval=float(zval)
                     except ValueError:
