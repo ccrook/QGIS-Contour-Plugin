@@ -100,7 +100,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
            (ExtendValues,ExtendOptions)
     }
 
-    def _enumParameter(self,name,description,optional=True):
+    def _enumParameter(self,name,description,optional=False):
         values,options=self.EnumMapping[name]
         return QgsProcessingParameterEnum( name, description, options, optional=optional)
 
