@@ -20,12 +20,12 @@ about=Generate a contour layer based on an attribute of a point vector layer.
 author=Chris Crook, Lionel Roubeyrie
 email=ccrook@linz.govt.nz
 tracker=https://github.com/ccrook/QGIS-Contour-Plugin/issues
-repository=https:://github.com/ccrook/QGIS-Contour-Plugin
+repository=https://github.com/ccrook/QGIS-Contour-Plugin
 
 # Non manadatory items
 
 tags=python, contour, processing
-homepage=https:://github.com/ccrook/QGIS-Contour-Plugin
+homepage=https://github.com/ccrook/QGIS-Contour-Plugin
 category=Vector
 icon=contour.png
 experimental=False
