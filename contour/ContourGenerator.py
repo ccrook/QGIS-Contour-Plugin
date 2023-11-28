@@ -486,7 +486,9 @@ class ContourGenerator( QObject ):
 
     def formatLevel( self, level ):
         ndp=self.calcLabelNdp()
-        if ndp < 0:
+        if self._labelNdp == 0:
+            return str(int(round(level, 0)))
+        elif ndp < 0:
             return str(level)
         elif self._labelTrimZeros:
             level=np.round(level,ndp)
