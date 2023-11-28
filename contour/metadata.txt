@@ -31,3 +31,4 @@ icon=contour.png
 experimental=False
 deprecated=False
 
+hasProcessingProvider=yes

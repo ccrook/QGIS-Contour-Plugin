@@ -46,13 +46,16 @@ if cmd_folder not in sys.path:
 
 class ContourPlugin(object):
 
-    def __init__(self,iface):
+    def __init__(self, iface):
         self.provider = ContourGeneratorProvider()
-        self.dialog=ContourDialogPlugin(iface)
+        self.dialog = ContourDialogPlugin(iface)
 
     def initGui(self):
         QgsApplication.processingRegistry().addProvider(self.provider)
         self.dialog.initGui()
+
+    def initProcessing(self):
+        QgsApplication.processingRegistry().addProvider(self.provider)
 
     def unload(self):
         QgsApplication.processingRegistry().removeProvider(self.provider)
