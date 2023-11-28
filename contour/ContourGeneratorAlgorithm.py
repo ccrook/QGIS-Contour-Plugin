@@ -285,9 +285,9 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         ncontour = self.parameterAsInt(parameters, self.PrmNContour, context)
         zmin = None
         zmax = None
-        if parameters[self.PrmMinContourValue] is not None:
+        if parameters.get(self.PrmMinContourValue) is not None:
             zmin = self.parameterAsDouble(parameters, self.PrmMinContourValue, context)
-        if parameters[self.PrmMaxContourValue] is not None:
+        if parameters.get(self.PrmMaxContourValue) is not None:
             zmax = self.parameterAsDouble(parameters, self.PrmMaxContourValue, context)
         interval = self.parameterAsDouble(parameters, self.PrmContourInterval, context)
         levels = self.parameterAsString(parameters, self.PrmContourLevels, context)
