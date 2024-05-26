@@ -70,20 +70,25 @@ class ContourExtendOption:
         neither: tr("Don't fill below or above maximum contour"),
     }
 
+    @staticmethod
     def options():
         return ContourExtendOption._options
 
+    @staticmethod
     def valid(option):
         return option in ContourExtendOption._options
 
+    @staticmethod
     def description(option):
         return ContourExtendOption._description.get(
             option, tr("Invalid contour option {0}").format(option)
         )
 
+    @staticmethod
     def extendBelow(option):
         return option in ContourExtendOption._below
 
+    @staticmethod
     def extendAbove(option):
         return option in ContourExtendOption._above
 
@@ -107,17 +112,21 @@ class ContourType:
         layer: QgsWkbTypes.MultiPolygon,
     }
 
+    @staticmethod
     def types():
         return ContourType._types
 
+    @staticmethod
     def valid(type):
         return type in ContourType._types
 
+    @staticmethod
     def description(type):
         return ContourType._description.get(
             type, tr("Invalid contour type {0}").format(type)
         )
 
+    @staticmethod
     def wkbtype(type):
         return ContourType._wkbtype.get(type)
 
@@ -598,11 +607,25 @@ class ContourGenerator(QObject):
     def buildQgsMultipolygon(self, polygon):
         """
         Construct QgsMultiPolygon from matplotlib version
+
+        For matplotlib 3.8.0+ no longer have make_paths function to construct polygon
+        definitions.  Initial (risky) approach assumes order of rings is outer followed by inner
+        rings for each polygon.  Distinguish outer from inner by ring direction (clockwise vs
+        anticlockwise).  This ordering of rings has seen in test cases but there is no reason
+        to assume this is valid in all cases or will not change in subsequent releases.
         """
-        pgns=[]
+        pgns = []
+        ringc = None  #
         for ring in polygon:
             if len(ring) > 3:
-                outer=(ring[1:, 0] * ring[:-1, 1] - ring[1:, 1] * ring[:-1, 0]).sum() > 0)
+                # Calculate area. +ve vs -ve is direction.  Use first ring to determine
+                # which direction is outer.
+                outer = (
+                    ring[1:, 0] * ring[:-1, 1] - ring[1:, 1] * ring[:-1, 0]
+                ).sum() > 0.0
+                if ringc is None:
+                    ringc = not outer
+                outer = outer ^ ringc
                 gring = [QgsPointXY(x, y) for x, y in ring]
                 if outer:
                     pgns.append([gring])
@@ -610,10 +633,10 @@ class ContourGenerator(QObject):
                     pgns[-1].append(gring)
         geom = None
         if len(pgns) > 0:
-            dx,dy=self._origin
+            dx, dy = self._origin
             geom = QgsGeometry.fromMultiPolygonXY(pgns)
             geom = geom.makeValid()
-            geom.translate(dx, dy)            
+            geom.translate(dx, dy)
         return geom
 
     def filledContourFeatures(self):
@@ -659,7 +682,7 @@ class ContourGenerator(QObject):
             label = self._rangeLabel(level_min, level_max)
             try:
                 try:
-                    geom=self.buildQgsMultipolygon(polygon)
+                    geom = self.buildQgsMultipolygon(polygon)
                     if geom is None:
                         continue
                 except Exception as ex:
