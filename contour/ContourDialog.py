@@ -317,10 +317,13 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self.uSetMaximum.setChecked(fval is not None)
             if fval is not None:
                 self.uMaxContour.setValue(fval)
-            levels = properties.get("Levels").split(";")
+            fval = self._getOptionalValue(properties, "ContourInterval", float)
+            if fval is not None:
+                self.uContourInterval.setValue(fval)
             ival = self._getOptionalValue(properties, "NContour", int)
             if ival is not None:
                 self.uNContour.setValue(ival)
+            levels = properties.get("Levels").split(";")
             self.uLevelsList.clear()
             for level in levels:
                 self.uLevelsList.addItem(level)
@@ -740,6 +743,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             "SourceLayerAttr",
             "Mode",
             "Levels",
+            "ContourInterval",
+            "NContour",
             "LabelPrecision",
             "MinContour",
             "MaxContour",
