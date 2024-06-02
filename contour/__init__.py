@@ -22,9 +22,9 @@
  This script initializes the plugin, making it known to QGIS.
 """
 
-__author__ = 'Chris Crook'
-__date__ = '2018-04-24'
-__copyright__ = '(C) 2018 by Chris Crook'
+__author__ = "Chris Crook"
+__date__ = "2018-04-24"
+__copyright__ = "(C) 2018 by Chris Crook"
 
 
 # noinspection PyPep8Naming
@@ -36,4 +36,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     """
     #
     from .ContourPlugin import ContourPlugin
+
     return ContourPlugin(iface)

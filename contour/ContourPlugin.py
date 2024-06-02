@@ -22,13 +22,13 @@
  ***************************************************************************/
 """
 
-__author__ = 'Chris Crook'
-__date__ = '2018-04-24'
-__copyright__ = '(C) 2018 by Chris Crook'
+__author__ = "Chris Crook"
+__date__ = "2018-04-24"
+__copyright__ = "(C) 2018 by Chris Crook"
 
 # This will get replaced with a git SHA1 when you do a git archive
 
-__revision__ = '$Format:%H$'
+__revision__ = "$Format:%H$"
 
 import os
 import sys
