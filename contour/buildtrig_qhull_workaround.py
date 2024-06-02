@@ -7,7 +7,6 @@ from matplotlib.tri import Triangulation
 if len(sys.argv) != 3:
     sys.exit(1)
 
-xy=np.load(sys.argv[1])
-trig=Triangulation(xy[0],xy[1])
-np.save(sys.argv[2],trig.triangles)
-
+xy = np.load(sys.argv[1])
+trig = Triangulation(xy[0], xy[1])
+np.save(sys.argv[2], trig.triangles)

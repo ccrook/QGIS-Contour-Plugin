@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_ContourDialog(object):
     def setupUi(self, ContourDialog):
         ContourDialog.setObjectName("ContourDialog")
@@ -30,7 +31,9 @@ class Ui_ContourDialog(object):
         self.gridLayout = QtWidgets.QGridLayout(self.groupBox_2)
         self.gridLayout.setObjectName("gridLayout")
         self.formLayout_2 = QtWidgets.QFormLayout()
-        self.formLayout_2.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout_2.setFieldGrowthPolicy(
+            QtWidgets.QFormLayout.AllNonFixedFieldsGrow
+        )
         self.formLayout_2.setContentsMargins(-1, 0, -1, -1)
         self.formLayout_2.setObjectName("formLayout_2")
         self.label_3 = QtWidgets.QLabel(self.groupBox_2)
@@ -38,7 +41,9 @@ class Ui_ContourDialog(object):
         self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_3)
         self.uSourceLayer = QgsMapLayerComboBox(self.groupBox_2)
         self.uSourceLayer.setObjectName("uSourceLayer")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.uSourceLayer)
+        self.formLayout_2.setWidget(
+            1, QtWidgets.QFormLayout.FieldRole, self.uSourceLayer
+        )
         self.label_4 = QtWidgets.QLabel(self.groupBox_2)
         self.label_4.setObjectName("label_4")
         self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_4)
@@ -47,7 +52,9 @@ class Ui_ContourDialog(object):
         self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.uDataField)
         self.uSelectedOnly = QtWidgets.QCheckBox(self.groupBox_2)
         self.uSelectedOnly.setObjectName("uSelectedOnly")
-        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.uSelectedOnly)
+        self.formLayout_2.setWidget(
+            4, QtWidgets.QFormLayout.FieldRole, self.uSelectedOnly
+        )
         self.gridLayout.addLayout(self.formLayout_2, 1, 0, 1, 1)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -77,7 +84,9 @@ class Ui_ContourDialog(object):
         self.uUseGrid.setText("")
         self.uUseGrid.setObjectName("uUseGrid")
         self.horizontalLayout.addWidget(self.uUseGrid)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout.addItem(spacerItem)
         self.gridLayout.addLayout(self.horizontalLayout, 3, 0, 1, 1)
         self.uLayerDescription = QtWidgets.QLabel(self.groupBox_2)
@@ -103,10 +112,14 @@ class Ui_ContourDialog(object):
         self.uLayerContours = QtWidgets.QRadioButton(self.groupBox)
         self.uLayerContours.setObjectName("uLayerContours")
         self.horizontalLayout_7.addWidget(self.uLayerContours)
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_7.addItem(spacerItem1)
         self.gridLayout_2.addLayout(self.horizontalLayout_7, 0, 0, 1, 3)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        spacerItem2 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+        )
         self.gridLayout_2.addItem(spacerItem2, 10, 1, 1, 1)
         self.label_5 = QtWidgets.QLabel(self.groupBox)
         self.label_5.setObjectName("label_5")
@@ -115,7 +128,9 @@ class Ui_ContourDialog(object):
         self.label.setObjectName("label")
         self.gridLayout_2.addWidget(self.label, 3, 0, 1, 1)
         self.uNContour = QtWidgets.QSpinBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uNContour.sizePolicy().hasHeightForWidth())
@@ -129,7 +144,9 @@ class Ui_ContourDialog(object):
         self.label_10.setObjectName("label_10")
         self.gridLayout_2.addWidget(self.label_10, 8, 0, 1, 1)
         self.uExtend = QtWidgets.QComboBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uExtend.sizePolicy().hasHeightForWidth())
@@ -143,12 +160,16 @@ class Ui_ContourDialog(object):
         self.uSetMaximum.setObjectName("uSetMaximum")
         self.horizontalLayout_6.addWidget(self.uSetMaximum)
         self.uMaxContour = QtWidgets.QDoubleSpinBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uMaxContour.sizePolicy().hasHeightForWidth())
         self.uMaxContour.setSizePolicy(sizePolicy)
-        self.uMaxContour.setLocale(QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry))
+        self.uMaxContour.setLocale(
+            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+        )
         self.uMaxContour.setDecimals(4)
         self.uMaxContour.setMinimum(-999999999.0)
         self.uMaxContour.setMaximum(999999999.0)
@@ -159,7 +180,9 @@ class Ui_ContourDialog(object):
         self.label_7.setObjectName("label_7")
         self.gridLayout_2.addWidget(self.label_7, 1, 0, 1, 1)
         self.uMethod = QtWidgets.QComboBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uMethod.sizePolicy().hasHeightForWidth())
@@ -174,12 +197,16 @@ class Ui_ContourDialog(object):
         self.uSetMinimum.setObjectName("uSetMinimum")
         self.horizontalLayout_5.addWidget(self.uSetMinimum)
         self.uMinContour = QtWidgets.QDoubleSpinBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uMinContour.sizePolicy().hasHeightForWidth())
         self.uMinContour.setSizePolicy(sizePolicy)
-        self.uMinContour.setLocale(QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry))
+        self.uMinContour.setLocale(
+            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+        )
         self.uMinContour.setDecimals(4)
         self.uMinContour.setMinimum(-999999999.0)
         self.uMinContour.setMaximum(999999999.0)
@@ -190,12 +217,18 @@ class Ui_ContourDialog(object):
         self.label_6.setObjectName("label_6")
         self.gridLayout_2.addWidget(self.label_6, 7, 0, 1, 1)
         self.uContourInterval = QtWidgets.QDoubleSpinBox(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.uContourInterval.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.uContourInterval.sizePolicy().hasHeightForWidth()
+        )
         self.uContourInterval.setSizePolicy(sizePolicy)
-        self.uContourInterval.setLocale(QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry))
+        self.uContourInterval.setLocale(
+            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+        )
         self.uContourInterval.setDecimals(4)
         self.uContourInterval.setMinimum(-999999999.0)
         self.uContourInterval.setMaximum(999999999.0)
@@ -205,12 +238,16 @@ class Ui_ContourDialog(object):
         self.label_15.setObjectName("label_15")
         self.gridLayout_2.addWidget(self.label_15, 2, 0, 1, 1)
         self.uLevelsList = QtWidgets.QListWidget(self.groupBox)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uLevelsList.sizePolicy().hasHeightForWidth())
         self.uLevelsList.setSizePolicy(sizePolicy)
-        self.uLevelsList.setLocale(QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry))
+        self.uLevelsList.setLocale(
+            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+        )
         self.uLevelsList.setObjectName("uLevelsList")
         self.gridLayout_2.addWidget(self.uLevelsList, 1, 2, 10, 1)
         self.verticalLayout_2.addWidget(self.groupBox)
@@ -231,7 +268,9 @@ class Ui_ContourDialog(object):
         self.horizontalLayout_2.setContentsMargins(0, 0, -1, -1)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.uPrecision = QtWidgets.QSpinBox(self.groupBox_3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uPrecision.sizePolicy().hasHeightForWidth())
@@ -254,9 +293,13 @@ class Ui_ContourDialog(object):
         self.uLabelUnits = QtWidgets.QLineEdit(self.groupBox_3)
         self.uLabelUnits.setObjectName("uLabelUnits")
         self.horizontalLayout_2.addWidget(self.uLabelUnits)
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem3 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_2.addItem(spacerItem3)
-        self.formLayout.setLayout(1, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_2)
+        self.formLayout.setLayout(
+            1, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_2
+        )
         self.label_9 = QtWidgets.QLabel(self.groupBox_3)
         self.label_9.setObjectName("label_9")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_9)
@@ -273,10 +316,14 @@ class Ui_ContourDialog(object):
         self.uReverseRamp = QtWidgets.QCheckBox(self.groupBox_3)
         self.uReverseRamp.setObjectName("uReverseRamp")
         self.horizontalLayout_4.addWidget(self.uReverseRamp)
-        spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem4 = QtWidgets.QSpacerItem(
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout_4.addItem(spacerItem4)
         self.horizontalLayout_4.setStretch(1, 1)
-        self.formLayout.setLayout(2, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_4)
+        self.formLayout.setLayout(
+            2, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_4
+        )
         self.label_13 = QtWidgets.QLabel(self.groupBox_3)
         self.label_13.setObjectName("label_13")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_13)
@@ -286,7 +333,9 @@ class Ui_ContourDialog(object):
         self.scrollArea_2.setWidget(self.scrollAreaWidgetContents_2)
         self.verticalLayout.addWidget(self.scrollArea_2)
         self.uMessageBar = QgsMessageBar(ContourDialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uMessageBar.sizePolicy().hasHeightForWidth())
@@ -366,10 +415,14 @@ class Ui_ContourDialog(object):
         self.groupBox_2.setTitle(_translate("ContourDialog", "Input"))
         self.label_3.setText(_translate("ContourDialog", "Point layer"))
         self.label_4.setText(_translate("ContourDialog", "Data value"))
-        self.uSelectedOnly.setText(_translate("ContourDialog", "Use selected points only"))
+        self.uSelectedOnly.setText(
+            _translate("ContourDialog", "Use selected points only")
+        )
         self.label_2.setText(_translate("ContourDialog", "Remove duplicate points"))
         self.label_11.setText(_translate("ContourDialog", "Tolerance"))
-        self.uUseGridLabel.setText(_translate("ContourDialog", "Use grid based contouring"))
+        self.uUseGridLabel.setText(
+            _translate("ContourDialog", "Use grid based contouring")
+        )
         self.groupBox.setTitle(_translate("ContourDialog", "Contouring"))
         self.uLinesContours.setText(_translate("ContourDialog", "contour lines"))
         self.uFilledContours.setText(_translate("ContourDialog", "filled contours"))
@@ -377,7 +430,12 @@ class Ui_ContourDialog(object):
         self.uLayerContours.setText(_translate("ContourDialog", "contour layers"))
         self.label_5.setText(_translate("ContourDialog", "Minimum"))
         self.label.setText(_translate("ContourDialog", "Number"))
-        self.uNContour.setStatusTip(_translate("ContourDialog", "Number of levels between min and max value (from data field)"))
+        self.uNContour.setStatusTip(
+            _translate(
+                "ContourDialog",
+                "Number of levels between min and max value (from data field)",
+            )
+        )
         self.label_10.setText(_translate("ContourDialog", "Extend"))
         self.uSetMaximum.setText(_translate("ContourDialog", "Set"))
         self.label_7.setText(_translate("ContourDialog", "Method"))
@@ -386,7 +444,9 @@ class Ui_ContourDialog(object):
         self.label_15.setText(_translate("ContourDialog", "Interval"))
         self.groupBox_3.setTitle(_translate("ContourDialog", "Output"))
         self.label_8.setText(_translate("ContourDialog", "Layer name"))
-        self.uPrecision.setStatusTip(_translate("ContourDialog", "Number of decimal places shown in labels"))
+        self.uPrecision.setStatusTip(
+            _translate("ContourDialog", "Number of decimal places shown in labels")
+        )
         self.label_14.setText(_translate("ContourDialog", "Trim zeros"))
         self.label_12.setText(_translate("ContourDialog", "Units"))
         self.label_9.setText(_translate("ContourDialog", "Label precision"))
@@ -395,6 +455,7 @@ class Ui_ContourDialog(object):
         self.uHelpButton.setText(_translate("ContourDialog", "Help"))
         self.uAddButton.setText(_translate("ContourDialog", "Add"))
         self.uCloseButton.setText(_translate("ContourDialog", "Close"))
+
 
 from qgis.gui import QgsColorRampButton
 from qgis.gui import QgsFieldExpressionWidget
