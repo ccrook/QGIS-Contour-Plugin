@@ -71,25 +71,20 @@ class ContourExtendOption:
         neither: tr("Don't fill below or above maximum contour"),
     }
 
-    @staticmethod
     def options():
         return ContourExtendOption._options
 
-    @staticmethod
     def valid(option):
         return option in ContourExtendOption._options
 
-    @staticmethod
     def description(option):
         return ContourExtendOption._description.get(
             option, tr("Invalid contour option {0}").format(option)
         )
 
-    @staticmethod
     def extendBelow(option):
         return option in ContourExtendOption._below
 
-    @staticmethod
     def extendAbove(option):
         return option in ContourExtendOption._above
 
@@ -113,21 +108,17 @@ class ContourType:
         layer: QgsWkbTypes.MultiPolygon,
     }
 
-    @staticmethod
     def types():
         return ContourType._types
 
-    @staticmethod
     def valid(type):
         return type in ContourType._types
 
-    @staticmethod
     def description(type):
         return ContourType._description.get(
             type, tr("Invalid contour type {0}").format(type)
         )
 
-    @staticmethod
     def wkbtype(type):
         return ContourType._wkbtype.get(type)
 
@@ -530,34 +521,6 @@ class ContourGenerator(QObject):
     def _levelLabel(self, level):
         return self.formatLevel(level) + self._labelUnits
 
-    def _contourPathsFromContourSet(self, cs):
-        """
-        Routine to extract paths from a matplotlib ContourSet.  This was
-        modified at matplotlib version 3.8.0 - this routine handles returns
-        an array of paths for each level for either before or after this change.
-        After 3.8.0 the array will contain just one path for each level.
-
-        (https://matplotlib.org/stable/api/prev_api_changes/api_changes_3.8.0.html)
-        Prior to this release, ContourSet (the object returned by contour) was a custom object
-        holding multiple Collections (and not an Artist) -- one collection per level, each
-        connected component of that level's contour being an entry in the corresponding collection.
-
-        ContourSet is now instead a plain Collection (and thus an Artist). The collection contains
-        a single path per contour level; this path may be non-continuous in case there are multiple
-        connected components.
-        """
-
-        from matplotlib.collections import Collection
-
-        # After 3.8.0 the ContourSet is just a collection
-        if isinstance(cs, Collection):
-            return [[p] for p in cs.get_paths()]
-
-        paths = []
-        for collection in cs.collections:
-            paths.append(collection.get_paths())
-        return paths
-
     def lineContourFeatures(self):
         x, y, z = self.data()
         levels = self.levels()
@@ -611,35 +574,27 @@ class ContourGenerator(QObject):
             lmin = ""
         return lmin + op + lmax + self._labelUnits
 
-    def buildQgsPolygons(self, paths):
+    def buildQgsMultipolygon(self, polygon):
         """
-        Construct QgsPolygon geometries from matplotlib version
+        Construct QgsMultiPolygon from matplotlib version
         """
         mpoly = []
         invalid = 0
-        notpoly = {}
-        for path in paths:
+        for path in polygon.get_paths():
             path.should_simplify = False
             poly = path.to_polygons()
             if len(poly) < 1:
                 continue
             if len(poly[0]) < 3:
-                # Have had one vertex polygon from matplotlib!
+                # Have had one vertix polygon from matplotlib!
                 continue
-            polypts = [[QgsPointXY(x, y) for x, y in p] for p in poly if len(p) >= 3]
-            pgn = QgsGeometry.fromPolygonXY(polypts)
-            pgn = pgn.makeValid()
-            if pgn.type() == Qgis.GeometryType.Polygon:
-                mpoly.append(pgn)
-            else:
-                ptype = pgn.type().name
-                if ptype not in notpoly:
-                    notpoly[ptype] = 0
-                notpoly[ptype] += 1
-        if notpoly:
-            warning = f"Ignoring non-polygon features: {' '.join((f'{k}:{v}' for k,v in notpoly.items()))}"
-            self._feedback.pushInfo(tr(warning))
-        return mpoly
+            polypts = [[QgsPointXY(x, y) for x, y in p] for p in poly if len(p) > 3]
+            mpoly.append(polypts)
+        if len(mpoly) > 0:
+            geom = QgsGeometry.fromMultiPolygonXY(mpoly)
+            geom = geom.makeValid()
+            return geom
+        return None
 
     def filledContourFeatures(self):
         levels = self.levels()
@@ -654,8 +609,6 @@ class ContourGenerator(QObject):
                 cs = tricontourf(trig, z, levels, extend=extend)
         except:
             raise ContourGenerationError.fromException(sys.exc_info())
-
-        contourPaths = self._contourPathsFromContourSet(cs)
 
         levels = [float(l) for l in cs.levels]
         if ContourExtendOption.extendBelow(extend):
@@ -680,29 +633,30 @@ class ContourGenerator(QObject):
         zminfield = zfieldname + "_min"
         zmaxfield = zfieldname + "_max"
 
-        for i, paths in enumerate(contourPaths):
+        for i, polygon in enumerate(cs.collections):
             level_min = levels[i]
             level_max = levels[i + 1]
             label = self._rangeLabel(level_min, level_max)
             try:
                 try:
-                    mpoly = self.buildQgsPolygons(paths)
-                    if len(mpoly) == 0:
+                    geom = self.buildQgsMultipolygon(polygon)
+                    if geom is None:
                         continue
+                    geom.translate(dx, dy)
                 except Exception as ex:
                     ninvalid += 1
                     continue
-                for geom in mpoly:
-                    geom.translate(dx, dy)
-                    feat = QgsFeature(fields)
-                    feat.setGeometry(geom)
-                    feat["index"] = i
-                    feat[zminfield] = float(level_min)
-                    feat[zmaxfield] = float(level_max)
-                    feat["label"] = label
-                    yield feat
+                feat = QgsFeature(fields)
+                feat.setGeometry(geom)
+                feat["index"] = i
+                feat[zminfield] = float(level_min)
+                feat[zmaxfield] = float(level_max)
+                feat["label"] = label
+                yield feat
             except Exception as ex:
-                self._feedback.reportError(str(ex))
+                raise
+                self._feedback.reportError(sys.exc_info()[1])
+
         if ninvalid > 0:
             self._feedback.pushInfo(
                 tr("{0} invalid contour geometries discarded").format(ninvalid)
@@ -718,7 +672,6 @@ class ContourGenerator(QObject):
                 trig, gz = self.trigContourData()
         except:
             raise ContourGenerationError.fromException(sys.exc_info())
-            contourPaths = self._contourPathsFromContourSet(cs)
 
         fields = self.fields()
         ninvalid = 0
@@ -742,26 +695,24 @@ class ContourGenerator(QObject):
                     )
             except:
                 raise ContourGenerationError.fromException(sys.exc_info())
-            contourPaths = self._contourPathsFromContourSet(cs)
-            if len(contourPaths) < 1:
+            if len(cs.collections) < 1:
                 continue
-            polygon = contourPaths[0]
+            polygon = cs.collections[0]
             try:
                 try:
-                    mpoly = self.buildQgsPolygons(polygon)
-                    if len(mpoly) == 0:
+                    geom = self.buildQgsMultipolygon(polygon)
+                    if geom is None:
                         continue
+                    geom.translate(dx, dy)
                 except Exception as ex:
                     ninvalid += 1
                     continue
-                for geom in mpoly:
-                    geom.translate(dx, dy)
-                    feat = QgsFeature(fields)
-                    feat.setGeometry(geom)
-                    feat["index"] = i
-                    feat[zfield] = float(level)
-                    feat["label"] = self._levelLabel(level)
-                    yield feat
+                feat = QgsFeature(fields)
+                feat.setGeometry(geom)
+                feat["index"] = i
+                feat[zfield] = float(level)
+                feat["label"] = self._levelLabel(level)
+                yield feat
             except Exception as ex:
                 self._feedback.reportError(ex.message)
 
