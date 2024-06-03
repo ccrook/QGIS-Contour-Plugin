@@ -76,6 +76,10 @@ class ContourDialogPlugin:
             )
             return
 
+        QgsMessageLog.logMessage(
+            f"Contour plugin is using matplotlib version {mpl.__version__} and numpy version {np.__version__}",
+            level=Qgis.Info,
+        )
         self.action = QAction(
             QIcon(":/plugins/contour/contour.png"), "Contour", self._iface.mainWindow()
         )
@@ -208,6 +212,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         if self.uSourceLayer.currentIndex() < 0 and self.uSourceLayer.count() == 1:
             self.uSourceLayer.setCurrentIndex(0)
         self.uSourceLayerChanged(self.uSourceLayer.currentLayer())
+        self.reloadData()
 
         # Is MPL version Ok?
         if self._isMPLOk() == False:

@@ -10,7 +10,6 @@ from .ContourMethod import ContourMethodError
 qgis_qhull_fails = platform.platform().startswith("Linux")
 
 from qgis.core import (
-    Qgis,
     QgsExpression,
     QgsExpressionContext,
     QgsFeature,
