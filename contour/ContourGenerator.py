@@ -573,13 +573,13 @@ class ContourGenerator(QObject):
             lmin = ""
         return lmin + op + lmax + self._labelUnits
 
-    def buildQgsMultipolygon(self, polygon):
+    def buildQgsMultipolygon(self, pathlist):
         """
         Construct QgsMultiPolygon from matplotlib version
         """
         mpoly = []
         invalid = 0
-        for path in polygon.get_paths():
+        for path in pathlist:
             path.should_simplify = False
             poly = path.to_polygons()
             if len(poly) < 1:
@@ -632,13 +632,18 @@ class ContourGenerator(QObject):
         zminfield = zfieldname + "_min"
         zmaxfield = zfieldname + "_max"
 
-        for i, polygon in enumerate(cs.collections):
+        try:
+            pathlists = [c.get_paths() for c in cs.collections]
+        except AttributeError:
+            pathlists = [[p] for p in cs.get_paths()]
+
+        for i, pathlist in enumerate(pathlists):
             level_min = levels[i]
             level_max = levels[i + 1]
             label = self._rangeLabel(level_min, level_max)
             try:
                 try:
-                    geom = self.buildQgsMultipolygon(polygon)
+                    geom = self.buildQgsMultipolygon(pathlist)
                     if geom is None:
                         continue
                     geom.translate(dx, dy)
@@ -694,12 +699,16 @@ class ContourGenerator(QObject):
                     )
             except:
                 raise ContourGenerationError.fromException(sys.exc_info())
-            if len(cs.collections) < 1:
+            try:
+                pathlists = [c.get_paths() for c in cs.collections]
+            except AttributeError:
+                pathlists = [[p] for p in cs.get_paths()]
+            if len(pathlists) < 1:
                 continue
-            polygon = cs.collections[0]
+            pathlist = pathlists[0]
             try:
                 try:
-                    geom = self.buildQgsMultipolygon(polygon)
+                    geom = self.buildQgsMultipolygon(pathlist)
                     if geom is None:
                         continue
                     geom.translate(dx, dy)
