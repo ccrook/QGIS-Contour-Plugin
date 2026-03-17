@@ -26,7 +26,7 @@ __author__ = "Chris Crook"
 __date__ = "2018-04-24"
 __copyright__ = "(C) 2018 by Chris Crook"
 
-from PyQt5.QtGui import QIcon
+from qgis.PyQt.QtGui import QIcon
 from qgis.core import QgsProcessingProvider
 from .ContourGeneratorAlgorithm import ContourGeneratorAlgorithm
 from . import resources

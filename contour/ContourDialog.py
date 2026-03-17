@@ -20,10 +20,10 @@
 #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #       MA 02110-1301, USA.
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtXml import QDomDocument
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtWidgets import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtXml import QDomDocument
 from qgis.core import *
 from qgis.gui import QgsMessageBar
 from . import resources
@@ -78,7 +78,7 @@ class ContourDialogPlugin:
 
         QgsMessageLog.logMessage(
             f"Contour plugin is using matplotlib version {mpl.__version__} and numpy version {np.__version__}",
-            level=Qgis.Info,
+            level=Qgis.MessageLevel.Info,
         )
         self.action = QAction(
             QIcon(":/plugins/contour/contour.png"), "Contour", self._iface.mainWindow()
@@ -99,7 +99,7 @@ class ContourDialogPlugin:
     def run(self):
         try:
             dlg = ContourDialog(self._iface)
-            dlg.exec_()
+            dlg.exec()
         except ContourError:
             QMessageBox.warning(
                 self._iface.mainWindow(), tr("Contour error"), str(sys.exc_info()[1])
@@ -150,9 +150,9 @@ class ContourDialog(QDialog, Ui_ContourDialog):
         self.uSelectedOnly.setChecked(False)
         self.uSelectedOnly.setEnabled(False)
         self.uUseGrid.setEnabled(False)
-        self.uSourceLayer.setFilters(QgsMapLayerProxyModel.PointLayer)
+        self.uSourceLayer.setFilters(QgsMapLayerProxyModel.Filter.PointLayer)
         self.uDataField.setExpressionDialogTitle(tr("Value to contour"))
-        self.uDataField.setFilters(QgsFieldProxyModel.Numeric)
+        self.uDataField.setFilters(QgsFieldProxyModel.Filter.Numeric)
         self.uNContour.setMinimum(2)
         self.uNContour.setValue(10)
         self.uSetMinimum.setChecked(False)
@@ -433,7 +433,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def editLevel(self, item=None):
         if not self._canEditList:
             return
-        if item is None or QApplication.keyboardModifiers() & Qt.ShiftModifier:
+        if item is None or QApplication.keyboardModifiers() & Qt.KeyboardModifier.ShiftModifier:
             list = self.uLevelsList
             val = " ".join([list.item(i).text() for i in range(0, list.count())])
         else:
@@ -444,7 +444,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             tr("Enter a single level to replace this one")
             + "\n"
             + tr("or a space separated list of levels to replace all"),
-            QLineEdit.Normal,
+            QLineEdit.EchoMode.Normal,
             val,
         )
         if ok:
@@ -595,8 +595,8 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             self,
             tr("Replace contour layers"),
             message,
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
-            QMessageBox.Cancel,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
         )
 
     def addContours(self):
@@ -606,14 +606,14 @@ class ContourDialog(QDialog, Ui_ContourDialog):
             replaceContourId = ""
             for set in self.candidateReplacementSets():
                 result = self.confirmReplaceSet(set)
-                if result == QMessageBox.Cancel:
+                if result == QMessageBox.StandardButton.Cancel:
                     return
-                if result == QMessageBox.Yes:
+                if result == QMessageBox.StandardButton.Yes:
                     self._replaceLayerSet = set
                     replaceContourId = self.layerSetContourId(set)
                     break
             try:
-                QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+                QApplication.setOverrideCursor(QCursor(Qt.CursorShape.WaitCursor))
                 self.setLabelFormat()
                 if self.uLinesContours.isChecked() or self.uBoth.isChecked():
                     self.makeContourLayer(ContourType.line)
@@ -657,7 +657,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def sourceLayers(self):
         for layer in list(QgsProject.instance().mapLayers().values()):
             if (layer.type() == layer.VectorLayer) and (
-                layer.geometryType() == QgsWkbTypes.PointGeometry
+                layer.geometryType() == QgsWkbTypes.GeometryType.PointGeometry
             ):
                 yield layer
 
@@ -668,7 +668,7 @@ class ContourDialog(QDialog, Ui_ContourDialog):
     def clearLayer(self, layer):
         pl = layer.dataProvider()
         request = QgsFeatureRequest()
-        request.setFlags(QgsFeatureRequest.NoGeometry)
+        request.setFlags(QgsFeatureRequest.Flag.NoGeometry)
         request.setSubsetOfAttributes([])
         fids = []
         for f in pl.getFeatures(request):

@@ -32,3 +32,7 @@ experimental=False
 deprecated=False
 
 hasProcessingProvider=yes
+
+# Added by Qt5 to Qt6 migration script
+supportsQt6=True
+qgisMaximumVersion=4.99

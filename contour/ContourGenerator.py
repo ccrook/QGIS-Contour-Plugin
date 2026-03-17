@@ -20,7 +20,7 @@ from qgis.core import (
     QgsFields,
     QgsWkbTypes,
 )
-from PyQt5.QtCore import QObject, QVariant, QCoreApplication
+from qgis.PyQt.QtCore import QObject, QVariant, QCoreApplication
 
 _mplAvailable = False
 try:
@@ -102,9 +102,9 @@ class ContourType:
     }
 
     _wkbtype = {
-        line: QgsWkbTypes.MultiLineString,
-        filled: QgsWkbTypes.MultiPolygon,
-        layer: QgsWkbTypes.MultiPolygon,
+        line: QgsWkbTypes.Type.MultiLineString,
+        filled: QgsWkbTypes.Type.MultiPolygon,
+        layer: QgsWkbTypes.Type.MultiPolygon,
     }
 
     def types():
@@ -306,7 +306,7 @@ class ContourGenerator(QObject):
                         raise ContourError(tr("Z value {0} is not number").format(zval))
                     if zval is not None:
                         fgeom = feat.geometry()
-                        if QgsWkbTypes.flatType(fgeom.wkbType()) != QgsWkbTypes.Point:
+                        if QgsWkbTypes.flatType(fgeom.wkbType()) != QgsWkbTypes.Type.Point:
                             raise ContourError(
                                 tr(
                                     "Invalid geometry type for contouring - must be point geometry"

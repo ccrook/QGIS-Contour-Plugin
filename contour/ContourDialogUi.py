@@ -2,11 +2,11 @@
 
 # Form implementation generated from reading ui file 'ContourDialogUi.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: qgis.PyQt UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qgis.PyQt import QtCore, QtGui, QtWidgets
 
 
 class Ui_ContourDialog(object):

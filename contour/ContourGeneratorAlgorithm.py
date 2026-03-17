@@ -31,8 +31,8 @@ __copyright__ = "(C) 2018 by Chris Crook"
 __revision__ = "$Format:%H$"
 
 import os.path
-from PyQt5.QtCore import QCoreApplication, QUrl
-from PyQt5.QtGui import QIcon
+from qgis.PyQt.QtCore import QCoreApplication, QUrl
+from qgis.PyQt.QtGui import QIcon
 from qgis.core import (
     QgsProcessing,
     QgsFeatureSink,
@@ -135,7 +135,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterFeatureSource(
                 self.PrmInputLayer,
                 tr("Input point layer"),
-                [QgsProcessing.TypeVectorPoint],
+                [QgsProcessing.SourceType.TypeVectorPoint],
             )
         )
 
@@ -156,7 +156,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterNumber(
                 self.PrmDuplicatePointTolerance,
                 tr("Duplicate point tolerance"),
-                QgsProcessingParameterNumber.Double,
+                QgsProcessingParameterNumber.Type.Double,
                 minValue=0.0,
                 defaultValue=0.0,
                 optional=True,
@@ -197,7 +197,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterNumber(
                 self.PrmMinContourValue,
                 tr("Minimum contour level (omit to use data minimum)"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 optional=True,
             )
         )
@@ -206,7 +206,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterNumber(
                 self.PrmMaxContourValue,
                 tr("Maximum contour level (omit to use data maximum)"),
-                type=QgsProcessingParameterNumber.Double,
+                type=QgsProcessingParameterNumber.Type.Double,
                 optional=True,
             )
         )
@@ -215,7 +215,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterNumber(
                 self.PrmContourInterval,
                 tr("Contour interval"),
-                QgsProcessingParameterNumber.Double,
+                QgsProcessingParameterNumber.Type.Double,
                 minValue=0.0,
                 defaultValue=1.0,
                 optional=True,
@@ -238,7 +238,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterNumber(
                 self.PrmLabelDecimalPlaces,
                 tr("Label decimal places (-1 for auto)"),
-                QgsProcessingParameterNumber.Integer,
+                QgsProcessingParameterNumber.Type.Integer,
                 defaultValue=-1,
                 minValue=-1,
                 maxValue=10,
@@ -330,7 +330,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
 
             # Add features to the sink
             for feature in generator.contourFeatures():
-                sink.addFeature(feature, QgsFeatureSink.FastInsert)
+                sink.addFeature(feature, QgsFeatureSink.Flag.FastInsert)
 
         except (ContourError, ContourMethodError) as ex:
             feedback.reportError(ex.message())
@@ -350,7 +350,7 @@ class ContourGeneratorAlgorithm(QgsProcessingAlgorithm):
         )
         if not os.path.exists(file):
             return ""
-        return QUrl.fromLocalFile(file).toString(QUrl.FullyEncoded)
+        return QUrl.fromLocalFile(file).toString(QUrl.ComponentFormattingOption.FullyEncoded)
 
     def displayName(self):
         return tr("Generate Contours")
