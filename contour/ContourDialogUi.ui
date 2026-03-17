@@ -3,7 +3,7 @@
  <class>ContourDialog</class>
  <widget class="QDialog" name="ContourDialog">
   <property name="windowModality">
-   <enum>Qt::NonModal</enum>
+   <enum>Qt::WindowModality::NonModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -23,7 +23,7 @@
    <item>
     <widget class="QScrollArea" name="scrollArea_2">
      <property name="horizontalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
+      <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
      </property>
      <property name="widgetResizable">
       <bool>true</bool>
@@ -47,7 +47,7 @@
           <item row="1" column="0">
            <layout class="QFormLayout" name="formLayout_2">
             <property name="fieldGrowthPolicy">
-             <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+             <enum>QFormLayout::FieldGrowthPolicy::AllNonFixedFieldsGrow</enum>
             </property>
             <property name="topMargin">
              <number>0</number>

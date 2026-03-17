@@ -12,13 +12,13 @@ from qgis.PyQt import QtCore, QtGui, QtWidgets
 class Ui_ContourDialog(object):
     def setupUi(self, ContourDialog):
         ContourDialog.setObjectName("ContourDialog")
-        ContourDialog.setWindowModality(QtCore.Qt.NonModal)
+        ContourDialog.setWindowModality(QtCore.Qt.WindowModality.NonModal)
         ContourDialog.resize(655, 742)
         ContourDialog.setSizeGripEnabled(True)
         self.verticalLayout = QtWidgets.QVBoxLayout(ContourDialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.scrollArea_2 = QtWidgets.QScrollArea(ContourDialog)
-        self.scrollArea_2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scrollArea_2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollArea_2.setObjectName("scrollArea_2")
         self.scrollAreaWidgetContents_2 = QtWidgets.QWidget()
@@ -32,28 +32,28 @@ class Ui_ContourDialog(object):
         self.gridLayout.setObjectName("gridLayout")
         self.formLayout_2 = QtWidgets.QFormLayout()
         self.formLayout_2.setFieldGrowthPolicy(
-            QtWidgets.QFormLayout.AllNonFixedFieldsGrow
+            QtWidgets.QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
         )
         self.formLayout_2.setContentsMargins(-1, 0, -1, -1)
         self.formLayout_2.setObjectName("formLayout_2")
         self.label_3 = QtWidgets.QLabel(self.groupBox_2)
         self.label_3.setObjectName("label_3")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_3)
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_3)
         self.uSourceLayer = QgsMapLayerComboBox(self.groupBox_2)
         self.uSourceLayer.setObjectName("uSourceLayer")
         self.formLayout_2.setWidget(
-            1, QtWidgets.QFormLayout.FieldRole, self.uSourceLayer
+            1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.uSourceLayer
         )
         self.label_4 = QtWidgets.QLabel(self.groupBox_2)
         self.label_4.setObjectName("label_4")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_4)
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_4)
         self.uDataField = QgsFieldExpressionWidget(self.groupBox_2)
         self.uDataField.setObjectName("uDataField")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.uDataField)
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.ItemRole.FieldRole, self.uDataField)
         self.uSelectedOnly = QtWidgets.QCheckBox(self.groupBox_2)
         self.uSelectedOnly.setObjectName("uSelectedOnly")
         self.formLayout_2.setWidget(
-            4, QtWidgets.QFormLayout.FieldRole, self.uSelectedOnly
+            4, QtWidgets.QFormLayout.ItemRole.FieldRole, self.uSelectedOnly
         )
         self.gridLayout.addLayout(self.formLayout_2, 1, 0, 1, 1)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -85,7 +85,7 @@ class Ui_ContourDialog(object):
         self.uUseGrid.setObjectName("uUseGrid")
         self.horizontalLayout.addWidget(self.uUseGrid)
         spacerItem = QtWidgets.QSpacerItem(
-            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum
         )
         self.horizontalLayout.addItem(spacerItem)
         self.gridLayout.addLayout(self.horizontalLayout, 3, 0, 1, 1)
@@ -113,12 +113,12 @@ class Ui_ContourDialog(object):
         self.uLayerContours.setObjectName("uLayerContours")
         self.horizontalLayout_7.addWidget(self.uLayerContours)
         spacerItem1 = QtWidgets.QSpacerItem(
-            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum
         )
         self.horizontalLayout_7.addItem(spacerItem1)
         self.gridLayout_2.addLayout(self.horizontalLayout_7, 0, 0, 1, 3)
         spacerItem2 = QtWidgets.QSpacerItem(
-            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+            20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding
         )
         self.gridLayout_2.addItem(spacerItem2, 10, 1, 1, 1)
         self.label_5 = QtWidgets.QLabel(self.groupBox)
@@ -129,7 +129,7 @@ class Ui_ContourDialog(object):
         self.gridLayout_2.addWidget(self.label, 3, 0, 1, 1)
         self.uNContour = QtWidgets.QSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -145,7 +145,7 @@ class Ui_ContourDialog(object):
         self.gridLayout_2.addWidget(self.label_10, 8, 0, 1, 1)
         self.uExtend = QtWidgets.QComboBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -161,14 +161,14 @@ class Ui_ContourDialog(object):
         self.horizontalLayout_6.addWidget(self.uSetMaximum)
         self.uMaxContour = QtWidgets.QDoubleSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uMaxContour.sizePolicy().hasHeightForWidth())
         self.uMaxContour.setSizePolicy(sizePolicy)
         self.uMaxContour.setLocale(
-            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+            QtCore.QLocale("C")
         )
         self.uMaxContour.setDecimals(4)
         self.uMaxContour.setMinimum(-999999999.0)
@@ -181,7 +181,7 @@ class Ui_ContourDialog(object):
         self.gridLayout_2.addWidget(self.label_7, 1, 0, 1, 1)
         self.uMethod = QtWidgets.QComboBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -198,14 +198,14 @@ class Ui_ContourDialog(object):
         self.horizontalLayout_5.addWidget(self.uSetMinimum)
         self.uMinContour = QtWidgets.QDoubleSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uMinContour.sizePolicy().hasHeightForWidth())
         self.uMinContour.setSizePolicy(sizePolicy)
         self.uMinContour.setLocale(
-            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+            QtCore.QLocale("C")
         )
         self.uMinContour.setDecimals(4)
         self.uMinContour.setMinimum(-999999999.0)
@@ -218,7 +218,7 @@ class Ui_ContourDialog(object):
         self.gridLayout_2.addWidget(self.label_6, 7, 0, 1, 1)
         self.uContourInterval = QtWidgets.QDoubleSpinBox(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -227,7 +227,7 @@ class Ui_ContourDialog(object):
         )
         self.uContourInterval.setSizePolicy(sizePolicy)
         self.uContourInterval.setLocale(
-            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+            QtCore.QLocale("C")
         )
         self.uContourInterval.setDecimals(4)
         self.uContourInterval.setMinimum(-999999999.0)
@@ -239,14 +239,14 @@ class Ui_ContourDialog(object):
         self.gridLayout_2.addWidget(self.label_15, 2, 0, 1, 1)
         self.uLevelsList = QtWidgets.QListWidget(self.groupBox)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+            QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.uLevelsList.sizePolicy().hasHeightForWidth())
         self.uLevelsList.setSizePolicy(sizePolicy)
         self.uLevelsList.setLocale(
-            QtCore.QLocale(QtCore.QLocale.C, QtCore.QLocale.AnyCountry)
+            QtCore.QLocale("C")
         )
         self.uLevelsList.setObjectName("uLevelsList")
         self.gridLayout_2.addWidget(self.uLevelsList, 1, 2, 10, 1)
@@ -260,16 +260,16 @@ class Ui_ContourDialog(object):
         self.formLayout.setObjectName("formLayout")
         self.label_8 = QtWidgets.QLabel(self.groupBox_3)
         self.label_8.setObjectName("label_8")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_8)
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_8)
         self.uOutputName = QtWidgets.QLineEdit(self.groupBox_3)
         self.uOutputName.setObjectName("uOutputName")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.uOutputName)
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.uOutputName)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setContentsMargins(0, 0, -1, -1)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.uPrecision = QtWidgets.QSpinBox(self.groupBox_3)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -294,15 +294,15 @@ class Ui_ContourDialog(object):
         self.uLabelUnits.setObjectName("uLabelUnits")
         self.horizontalLayout_2.addWidget(self.uLabelUnits)
         spacerItem3 = QtWidgets.QSpacerItem(
-            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum
         )
         self.horizontalLayout_2.addItem(spacerItem3)
         self.formLayout.setLayout(
-            1, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_2
+            1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.horizontalLayout_2
         )
         self.label_9 = QtWidgets.QLabel(self.groupBox_3)
         self.label_9.setObjectName("label_9")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_9)
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_9)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setContentsMargins(-1, -1, -1, 0)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
@@ -317,16 +317,16 @@ class Ui_ContourDialog(object):
         self.uReverseRamp.setObjectName("uReverseRamp")
         self.horizontalLayout_4.addWidget(self.uReverseRamp)
         spacerItem4 = QtWidgets.QSpacerItem(
-            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum
         )
         self.horizontalLayout_4.addItem(spacerItem4)
         self.horizontalLayout_4.setStretch(1, 1)
         self.formLayout.setLayout(
-            2, QtWidgets.QFormLayout.FieldRole, self.horizontalLayout_4
+            2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.horizontalLayout_4
         )
         self.label_13 = QtWidgets.QLabel(self.groupBox_3)
         self.label_13.setObjectName("label_13")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_13)
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.label_13)
         self.gridLayout_4.addLayout(self.formLayout, 0, 0, 1, 1)
         self.verticalLayout_2.addWidget(self.groupBox_3)
         self.verticalLayout_2.setStretch(1, 1)
@@ -334,7 +334,7 @@ class Ui_ContourDialog(object):
         self.verticalLayout.addWidget(self.scrollArea_2)
         self.uMessageBar = QgsMessageBar(ContourDialog)
         sizePolicy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred
         )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
@@ -348,7 +348,7 @@ class Ui_ContourDialog(object):
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         self.progressBar = QtWidgets.QProgressBar(ContourDialog)
         self.progressBar.setProperty("value", 0)
-        self.progressBar.setAlignment(QtCore.Qt.AlignCenter)
+        self.progressBar.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.progressBar.setTextVisible(True)
         self.progressBar.setObjectName("progressBar")
         self.horizontalLayout_8.addWidget(self.progressBar)
